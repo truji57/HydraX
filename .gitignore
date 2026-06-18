@@ -1,0 +1,79 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+*.egg
+venv/
+.venv/
+
+# Environment
+.env
+*.db
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+
+# Sensitive data
+credentials.txt
+*.log
+connection_log.txt
+
+# Old project
+HydraX - OLD stable version/
+
+# Mirror Trading Manager (3rd party)
+Mirror Trading Manager v5 - Lite/
+
+# PDF
+*.pdf
+
+# Test scripts (one-time use)
+backend/cleanup_duplicates.py
+backend/restore_all.py
+backend/check_reason.py
+backend/test_*.py
+backend/explore_*.py
+backend/capture_*.py
+backend/hook_pipe.py
+backend/map_pipes.py
+backend/get_pipe_handle.py
+backend/direct_pipe_test.py
+backend/pdf_output.txt
+
+# Generated output
+backend/pipe_capture.bin
+
+# Documentation  
+ARQUITECTURA.md
+PENDIENTES.md
+PLAN.md
+
+
+# Test files
+backend/explore_*.py
+backend/test_*.py
+backend/capture_*.py
+backend/check_*.py
+backend/hook_pipe.py
+backend/map_pipes.py
+backend/get_pipe_handle.py
+backend/test_pipe_send.py
+backend/direct_pipe_test.py
+backend/check_exports.py
+backend/pdf_output.txt
+
+# Mirror Trading Manager (3rd party)
+Mirror Trading Manager v5 - Lite/
+
+# PDFs
+TradeCopier_MT5_v2.pdf
