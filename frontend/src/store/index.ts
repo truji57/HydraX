@@ -12,6 +12,7 @@ interface AppState {
   copierStatus: CopierStatus;
   accounts: Account[];
   logs: LogEntry[];
+  version: string;
   toast: { message: string; type: 'ok' | 'error' | 'info' } | null;
 
   fetchStatus: () => Promise<void>;
@@ -35,12 +36,15 @@ export const useStore = create<AppState>((set, get) => ({
   },
   accounts: [],
   logs: [],
+  version: "",
   toast: null,
 
   fetchStatus: async () => {
     try {
       const s = await api.get<CopierStatus>('/copier/status');
       set({ copierStatus: s });
+      const health = await api.get<{ version: string }>('/system/health');
+      set({ version: health.version });
     } catch {}
   },
 

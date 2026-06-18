@@ -1,0 +1,331 @@
+--- PAGE 1 ---
+MT5 → MT5 TRADE COPIER
+Prompt Técnico para Claude Code / Cursor
+Inspirado en Mirror Trading Manager (Antonel) — Solo MT5
+Versión 2.0 — Junio 2026
+1. OBJETIVO Y REQUISITO CRÍTICO
+Construir una aplicación de escritorio Windows (C# .NET 8 + WPF) que copie operaciones en 
+tiempo real de una cuenta Master MT5 a múltiples cuentas Follower MT5, soportando entre 5 y 
+20 followers simultáneos.
+ REQUISITO CRÍTICO — NO NEGOCIABLE🔴
+Las operaciones copiadas a los followers MT5 DEBEN aparecer como MANUALES en el 
+historial
+NO deben aparecer como operaciones de EA (Expert Advisor)
+SOLUCIÓN: Conectarse a la terminal MT5 via Named Pipe interno o MT5 Manager API con 
+magic=0
+NUNCA usar un MQL5 EA para enviar órdenes al follower — eso las marcaría como EA
+magic=0 + canal de terminal = MT5 las registra como orden manual del usuario
+2. STACK TECNOLÓGICO
+Componente Tecnología
+Lenguaje C# .NET 8
+UI WPF (Windows Presentation Foundation)
+Conexión MT5 MT5 Named Pipe Automation (mismo PC/VPS) o MT5 Manager API
+Base de datos SQLite via Microsoft.Data.Sqlite
+Logging Serilog con sink a archivo + sink a UI en tiempo real
+Config JSON por cuenta — System.Text.Json
+MVVM CommunityToolkit.Mvvm
+Gráficos (opcional) LiveCharts2
+--- PAGE 2 ---
+Estructura de proyectos
+TradeCopier.sln
+├── TradeCopier.UI        → WPF — ventana principal, dialogs, log panel
+├── TradeCopier.Core      → Modelos, interfaces, motor de copia, MM logic
+├── TradeCopier.MT5       → Conector Named Pipe / Manager API
+├── TradeCopier.Data      → SQLite — repositorios y migraciones
+└── TradeCopier.Tests     → xUnit — tests unitarios
+3. CÓMO LOGRAR ÓRDENES MANUALES EN MT5
+3.1 Por qué funciona
+Método de envío magic number Aparece en MT5 como
+EA MQL5 (OrderSend) cualquiera ≠ 0 Expert Advisor
+Script MQL5 cualquiera Script
+Terminal API / Named Pipe con 
+magic=00 Manual ✓
+MT5 Manager API con magic=0 0 Manual ✓
+3.2 Implementación — Named Pipe Connector
+MT5 Desktop expone un named pipe por cada proceso abierto. Conectarse a él permite enviar 
+órdenes como si fuera el propio usuario de la terminal:
+// TradeCopier.MT5 / MT5PipeConnector.cs
+public class MT5PipeConnector : IMT5Connector
+{
+    private NamedPipeClientStream _pipe;
+    private int _pid;
+    // 1. Buscar el proceso MT5 que tiene logueada la cuenta correcta
+    public Process FindMT5Process(string accountLogin)
+    {
+        return Process.GetProcessesByName("terminal64")
+            .FirstOrDefault(p => GetMT5Login(p.Id) == accountLogin);
+    }
+    // 2. Conectar al pipe del proceso
+    public async Task ConnectAsync(int pid)
+    {
+        _pid = pid;
+        _pipe = new NamedPipeClientStream(".",
+                    $"MetaTrader5_{pid}", PipeDirection.InOut,
+                    PipeOptions.Asynchronous);
+--- PAGE 3 ---
+        await _pipe.ConnectAsync(timeoutMs: 5000);
+    }
+    // 3. Enviar orden — magic=0 → MT5 la registra como MANUAL
+    public async Task<bool> OpenTradeAsync(TradeRequest req)
+    {
+        var cmd = new MT5PipeCommand
+        {
+            Action   = MT5Action.OrderSend,
+            Symbol   = req.Symbol,
+            Type     = req.IsBuy ? OrderType.Buy : OrderType.Sell,
+            Volume   = req.Lots,
+            Magic    = 0,          // ← CRÍTICO
+            Comment  = req.Comment ?? string.Empty,
+            TP       = req.TakeProfit ?? 0,
+            SL       = req.StopLoss ?? 0,
+        };
+        return await SendCommandAsync(cmd);
+    }
+}
+  Si tienes acceso al MT5 Manager API (requiere ser broker o tener SDK), úsala en su lugar ⚠
+— es más robusta. El Named Pipe es la alternativa para usuarios retail, que es lo que usa el 
+MTM en su versión Lite.
+4. MOTOR DE COPIA — CORE ENGINE
+4.1 Flujo completo
+1.Monitor polling cada 100ms detecta nueva posición abierta en Master
+2.Validar: símbolo permitido, dentro ventana horaria, no más antigua de X horas
+3.Para cada Follower activo y conectado:
+   1.Calcular lot size según MM Mode configurado
+   2.Resolver nombre de símbolo: aplicar prefix/suffix o Symbol Mapping
+   3.Verificar slippage máximo si configurado
+   4.Enviar orden con magic=0 via Named Pipe / Manager API
+   5.Registrar en SQLite: ticket master, ticket follower, lots, símbolo, 
+timestamp
+   6.Emitir log con resultado (éxito/error) por follower
+4.Cuando Master cierra posición → cerrar posición correspondiente en cada follower
+4.2 Interfaces Core
+// TradeCopier.Core / ICopyEngine.cs
+--- PAGE 4 ---
+public interface ICopyEngine
+{
+    Task StartAsync(CancellationToken ct);
+    Task StopAsync();
+    event EventHandler<TradeOpenedEvent>  OnMasterTradeOpened;
+    event EventHandler<TradeClosedEvent>  OnMasterTradeClosed;
+    event EventHandler<CopyResultEvent>   OnCopyResult;
+    event EventHandler<LogEvent>          OnLog;
+}
+// TradeCopier.Core / Models.cs
+public record TradeRequest(
+    string  Symbol,
+    bool    IsBuy,
+    double  Lots,
+    double? TakeProfit  = null,
+    double? StopLoss    = null,
+    string  Comment     = "",
+    int     Magic       = 0     // SIEMPRE 0 para órdenes manuales
+);
+5. MONEY MANAGEMENT (MM MODES)
+Ventana dedicada 'Edit MM Mode (Global)' accesible desde el tab MM Mode (Global) del 
+follower. Panel izquierdo con opciones, panel derecho con calculadora de test en tiempo real 
+que muestra el Follower Lot Size resultante.
+5.1 Lista completa de modos (radio buttons)
+Modo MM Parámetros extra Fórmula
+Manual Fixed Lot Size Lot fijo lot_follower = valor_fijo
+Same Lot Size As Master 
+(Based on Multiplier)Multiplier (ej: 0.5), 
+Symbol, Incl. Contract 
+Size Calclot_follower = lot_master × multiplier  [× 
+ratio_contract_size]
+Same Lot Size As Master 
+(Based on %)Porcentaje, Symbol, 
+Incl. Contract Size Calclot_follower = lot_master × (% / 100)
+Same Ratio As Master By 
+BalanceSymbol, Incl. Contract 
+Size Calclot_follower = lot_master × (balance_follower /  
+balance_master)
+Same Ratio As Master By 
+EquitySymbol, Incl. Contract 
+Size Calclot_follower = lot_master × (equity_follower / 
+equity_master)
+Risk % Based on 
+Follower's Free MarginRiesgo %, Symbol lot_follower = (free_margin × riesgo%) / 
+(SL_puntos × valor_punto)
+Risk % Based on 
+Follower's Balance and Riesgo %, SL custom 
+en puntos, Symbollot_follower = (balance × riesgo%) / 
+(SL_custom × valor_punto)
+--- PAGE 5 ---
+Custom Stop-Loss
+Risk % Based on 
+Follower's Equity and 
+Custom Stop-LossRiesgo %, SL custom 
+en puntos, Symbollot_follower = (equity × riesgo%) / (SL_custom  
+× valor_punto)
+Risk % Based on 
+Follower's Balance and 
+Master's Stop-LossRiesgo %, Symbol lot_follower = (balance × riesgo%) / 
+(SL_master × valor_punto)
+Risk % Based on 
+Follower's Equity and 
+Master's Stop-LossRiesgo %, Symbol lot_follower = (equity × riesgo%) / (SL_master 
+× valor_punto)
+5.2 Parámetros comunes a todos los modos
+Parámetro Descripción
+*Symbol Símbolo de referencia para calcular el valor del punto y contract size. 
+Dropdown con los símbolos disponibles del follower.
+Incl. Contract Size 
+CalculationCheckbox — activar cuando los contract sizes del master y follower 
+son distintos. Ajusta el lot proporcionalmente al ratio de contract sizes.
+Lot Size Override | Min / 
+MaxClampear el lot calculado entre un mínimo y máximo absolutos
+Lot Size Filter Out | Min / 
+MaxSi el lot calculado está fuera del rango → no copiar la operación
+5.3 Panel de test en tiempo real
+•Campo 'Master Lot Size': introducir un lot de ejemplo del master
+•Resultado instantáneo: muestra el 'Follower Lot Size' calculado con los parámetros 
+actuales
+•Mensaje: 'The test result here will be the same as the trading lot size in reality'
+•Botón 'UPDATE MM SETTINGS AND CLOSE' — guarda y cierra | 'CANCEL' — 
+descarta cambios
+5.4 Notas de implementación
+  El campo *Symbol es obligatorio para los modos que necesitan calcular el valor del punto. ⚠
+Si el símbolo no está disponible en el follower, mostrar warning.
+  'Incl. Contract Size Calculation' es crítico cuando master opera en un broker con contract ⚠
+size 100 y follower tiene contract size 1 — sin esto el lot quedaría 100x más grande o más 
+pequeño.
+  Los modos Risk % con 'Master's Stop-Loss' requieren que el master tenga SL definido en la⚠  
+posición — si SL=0, usar fallback o no copiar con warning.
+--- PAGE 6 ---
+6. CONFIGURACIÓN DE CUENTAS
+6.1 Master — Simple Settings
+Parámetro Descripción
+Copy Open Trade Buy / Sell / ambos
+Allow Hedge Permitir posiciones simultáneas Buy+Sell en mismo símbolo
+Copy Close Trade Both Profit and Loss / Profit Only / Loss Only
+Asynchronous Closing Cerrar múltiples followers en paralelo (más rápido)
+Hold Followers X seconds Esperar X segundos antes de cerrar si master pierde conexión
+Copy Open Trade Time Ventana horaria: Start Time — End Time (HH:MM:SS)
+Equity Protector Cerrar todo si equity cae por debajo o sube por encima de nivel
+Too old to copy No copiar operaciones más antiguas de X horas/minutos
+6.2 Master — Advanced Settings
+Parámetro Descripción
+Max Opened Trades Límite global y por símbolo de trades abiertos simultáneos
+Random Delay Retraso aleatorio en open/close: Min ms, Max ms, Gap en puntos
+Pending Orders Copiar Limit/Stop orders, offset de precio en puntos
+Specific Filters Filtrar por Magic Numbers, Comment, Lot Size exacto
+Repeat Orders None / How many (N copias) / Auto (split por lote máximo)
+Close Master Trade Solo cuando algún follower también cierre
+6.3 Follower — Parámetros adicionales
+Parámetro Descripción
+First / Open Balance Balance inicial para cálculos de MM proporcional
+Yesterday Balance Reset automático diario
+Copy TP / SL Copiar Take Profit, Stop Loss, incluyendo modificaciones 
+posteriores
+One Order incl. TP/SL Enviar orden con TP/SL en una sola llamada (atomic)
+Trade Placement Type Manual / EA — seleccionar MANUAL para requisito crítico
+Open Trade Slippage Max Puntos máximos de slippage permitido (instant execution)
+Copy Magic Number NONE / FROM MASTER / CUSTOM VALUE
+Copy Order Comment NONE / FROM MASTER / CUSTOM VALUE
+Close by Currency/% /Points Cerrar todo al alcanzar target de profit/loss
+--- PAGE 7 ---
+Stop Trading Below/Above Pausar cuando se alcanza el target
+7. SYMBOLS MAPPING
+Ventana dedicada para mapear símbolos del Master con nombres distintos en cada Follower:
+•Panel izquierdo: lista de Masters activos con número de símbolos
+•Panel central: símbolos suscritos del Master seleccionado + Contract Size
+•Panel derecho: Followers con sus símbolos y estado del mapping
+•Acción: click en símbolo master → asignar al símbolo equivalente del follower
+•Select All / Unselect All / Hide Inactive por cada panel
+•SAVE | Delete All Mapped and Re-do | Apply only to Group
+Ejemplo de uso:
+•Master tiene 'NAS100.fs' → Follower tiene 'US100' → mapear para que se copie 
+correctamente
+•Master 'XAUUSD' → Follower 'GOLD.raw' → mapping resuelve el nombre antes de 
+enviar
+8. INTERFAZ GRÁFICA — VENTANA PRINCIPAL
+8.1 Tabla de cuentas
+Columnas requeridas (replicar el MTM):
+•State (semáforo verde/rojo) | Select (checkbox) | Group | Trader Name
+•Type (M-MT5 o F-MT5 en colores distintos) | Username | Name | Abbreviation
+•Ping | Buy Pos | Buy Qty | Sell Pos | Sell Qty
+•Live Balance | Equity | Margin % | DD % | Live PL
+•Connection Status | Status | Pwr (reconnect) | Edit | Bin (delete)
+•Opened | Trades | Total Symbols | Mapped | Notifications
+•Botones por fila: Positions | Close
+8.2 Panel de totales
+•N Master, N Follower, N Total connected
+•Columnas: Balance | Equity | Live PL | Daily PL | Live+Daily PL | Total PL
+•Botones: Close Trades Master | Close Trades Followers | Logout Masters | Logout 
+Followers | Logout All
+--- PAGE 8 ---
+8.3 Barra de botones principales
+•MASTER | FOLLOWER | SYMBOLS MAPPING | RESTART ALL CONNECTIONS
+•ACTIVE POSITIONS | COPY PRE-EXISTING ORDERS | MANUAL SEND ORDER | 
+OPEN EDITOR (BETA)
+8.4 Panel de Log (parte inferior)
+•Filtros con contador: X Errors (rojo) | 0 Warnings (amarillo) | N Info (azul) | N Debug 
+(gris)
+•Columnas: Timestamp | Nivel | Fuente (Master/Follower + nombre) | Mensaje
+•Búsqueda en tiempo real | Clear Log | Show Milliseconds | Auto Scroll
+•Colores por nivel: errores=rojo, warnings=amarillo, info=cyan, debug=gris
+9. BASE DE DATOS SQLite
+Tabla Campos clave
+Accounts id, type, trader_id, broker, server, login, config_json, enabled
+SymbolMappings id, master_account_id, follower_account_id, master_symbol, 
+follower_symbol
+OpenTrades id, master_ticket, follower_account_id, follower_ticket, symbol, lots, 
+open_time, status
+TradeHistory id, master_ticket, follower_account_id, follower_ticket, open_time, 
+close_time, profit
+Logs id, timestamp, level, source, message
+AppSettings key, value
+10. FUNCIONALIDADES ADICIONALES
+Funcionalidad Descripción
+Active Positions Ver todas las posiciones abiertas master+followers con opción de 
+cierre manual
+Copy Pre-existing Orders Al conectar follower nuevo, copiar posiciones ya abiertas del master al 
+precio actual
+Manual Send Order Enviar orden a uno o varios followers sin que exista en el master
+Restart All Connections Desconectar y reconectar todas las cuentas simultáneamente
+Auto Login At Startup Conectar automáticamente todas las cuentas al abrir la app
+Force Reconnect ∞ Reconexión automática infinita por cuenta si se desconecta
+--- PAGE 9 ---
+Equity Protector Cierre automático de todo al alcanzar nivel de equity crítico
+Notificaciones (v2) Email/Telegram cuando se abre/cierra trade o follower se desconecta
+11. PLAN DE IMPLEMENTACIÓN
+Fase 1 — Core MT5 (Semanas 1–2)
+5.Setup solution C#/.NET 8 con todos los proyectos
+6.Implementar MT5PipeConnector: detectar proceso, conectar, leer posiciones abiertas
+7.Enviar primera orden real con magic=0 — verificar que aparece como 'manual' en 
+historial MT5
+8.Polling de posiciones master cada 100ms con detección de cambios 
+(open/close/modify)
+Fase 2 — Motor de Copia (Semanas 3–4)
+9.Todos los filtros: símbolo, ventana horaria, antigüedad, slippage
+10.Todos los MM Modes implementados con tests unitarios
+11.Symbol Mapping funcionando con prefix/suffix y tabla de mapping
+12.SQLite — persistencia de estado, historial, recovery tras reinicio
+Fase 3 — UI WPF (Semanas 5–6)
+13.Ventana principal con tabla de cuentas, semáforos y totales
+14.Dialogs de configuración: Login, Simple Settings, Advanced Settings, Symbols
+15.Symbols Mapping window
+16.Log panel en tiempo real con colores y filtros
+17.Active Positions, Manual Send Order, Copy Pre-existing Orders
+Fase 4 — Pulido y Estabilidad (Semana 7–8)
+18.Auto-reconnect, heartbeat, manejo de errores robusto
+19.Testeo con 10+ followers simultáneos en demo
+20.Optimización de latencia master→follower < 200ms
+21.Empaquetado con instalador (Inno Setup o MSIX)
+--- PAGE 10 ---
+12. DEPENDENCIAS (NuGet)
+Paquete NuGet Uso
+Microsoft.Data.Sqlite Base de datos SQLite
+Serilog + Serilog.Sinks.File + 
+Serilog.Sinks.ObservableCollectionLogging
+CommunityToolkit.Mvvm MVVM bindings para WPF
+System.Text.Json Serialización de configuración
+xUnit + Moq Tests unitarios
+LiveCharts2.WPF (opcional) Gráfico de equity en tiempo real
+ NOTA FINAL PARA CLAUDE CODE / CURSOR📌
+Este documento es la especificación completa — implementar en el orden de las fases
+El requisito de 'orden manual' es la prioridad #1 — validar primero antes de continuar
+No añadir cTrader ni otras plataformas — solo MT5 en esta versión
+Arquitectura Clean: UI no habla directamente con MT5 — todo pasa por Core/interfaces
+Cada cuenta follower necesita una instancia de MT5 terminal abierta en el mismo PC/VPS
+— Fin de especificación v2.0 — Solo MT5 —

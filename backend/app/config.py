@@ -1,4 +1,5 @@
 import os
+import subprocess
 from pathlib import Path
 
 from pydantic_settings import BaseSettings
@@ -6,9 +7,23 @@ from pydantic_settings import BaseSettings
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
+def _get_version() -> str:
+    try:
+        result = subprocess.run(
+            ["git", "describe", "--tags", "--abbrev=0"],
+            capture_output=True, text=True, cwd=str(BASE_DIR.parent)
+        )
+        if result.returncode == 0 and result.stdout.strip():
+            tag = result.stdout.strip()
+            return tag.lstrip("v")
+    except Exception:
+        pass
+    return "2.0.0"
+
+
 class Settings(BaseSettings):
     APP_NAME: str = "HydraX"
-    APP_VERSION: str = "2.0.0"
+    APP_VERSION: str = _get_version()
     DEBUG: bool = True
 
     DATABASE_URL: str = f"sqlite:///{BASE_DIR / 'hydrax.db'}"

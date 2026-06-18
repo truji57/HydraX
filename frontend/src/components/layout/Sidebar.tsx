@@ -25,7 +25,7 @@ const links = [
 ];
 
 export function Sidebar() {
-  const { copierStatus, fetchStatus } = useStore();
+  const { copierStatus, version, fetchStatus } = useStore();
 
   const handleStartStop = async () => {
     if (copierStatus.running) {
@@ -39,11 +39,11 @@ export function Sidebar() {
   return (
     <aside className="w-56 h-screen border-r border-zinc-800 bg-zinc-950 flex flex-col">
       <div className="p-4 border-b border-zinc-800">
-        <h1 className="text-lg font-bold text-emerald-400 flex items-center gap-2">
-          <Activity size={22} />
+        <h1 className="text-2xl font-bold text-emerald-400 flex items-center gap-2">
+          <Activity size={26} />
           HydraX
         </h1>
-        <span className="text-xs text-zinc-500">Trade Copier v2</span>
+        <span className="text-xs text-zinc-500">Trade Copier v{version || "..."}</span>
       </div>
 
       <nav className="flex-1 p-3 space-y-1">
