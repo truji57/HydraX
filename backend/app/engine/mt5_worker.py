@@ -155,6 +155,7 @@ def mt5_master_monitor(account_id: str, name: str, login: int, password_enc: str
         pass
 
     try:
+        stats_counter = 0
         while not stop_flag.is_set():
             cur_positions = snapshot()
 

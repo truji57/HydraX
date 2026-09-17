@@ -1,6 +1,11 @@
 [
     {
         "date":  "2026-09-17",
+        "description":  "Fix crash del monitor master MT5: stats_counter sin inicializar provocaba UnboundLocalError y reinicios en bucle, impidiendo copiar/reportar posiciones",
+        "version":  "v2.60"
+    },
+    {
+        "date":  "2026-09-17",
         "description":  "Diagnostico de conexion MT5: los workers reportan el error real de MetaTrader5 (mt5.last_error) en los fallos de conexion; silenciados los access logs de uvicorn en start.bat (--no-access-log)",
         "version":  "v2.59"
     },
