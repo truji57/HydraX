@@ -1,6 +1,11 @@
 [
     {
         "date":  "2026-09-17",
+        "description":  "Fix: al reiniciar un worker slave se reutiliza la cola existente (antes se cerraba/creaba una nueva y los comandos de ese slave se perdian en silencio); logs de skip por autocopy pausado en ambos workers; arreglo del 500 en /api/trades/positions (dicts planos con direction.value/status.value)",
+        "version":  "v2.57"
+    },
+    {
+        "date":  "2026-09-17",
         "description":  "Ventanas con titulo HydraX (title_keeper reaplica el titulo cada segundo frente a node/vite) y rebranding en start/update.bat",
         "version":  "v2.56"
     },

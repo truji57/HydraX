@@ -54,6 +54,30 @@ def get_positions(db, slave_id=None, status="OPEN"):
     return query.order_by(desc(TicketMap.created_at)).all()
 
 
-@router.get("/positions", response_model=list)
+@router.get("/positions")
 def list_positions(slave_id: str | None = None, status: str = "OPEN", db: Session = Depends(get_db)):
-    return get_positions(db, slave_id, status)
+    rows = get_positions(db, slave_id, status)
+    account_ids = set()
+    for r in rows:
+        if r.master_account_id:
+            account_ids.add(r.master_account_id)
+        if r.slave_account_id:
+            account_ids.add(r.slave_account_id)
+    accounts = {a.id: a.name for a in db.query(Account).filter(Account.id.in_(account_ids)).all()}
+    return [
+        {
+            "id": r.id,
+            "master_ticket": r.master_ticket,
+            "master_name": accounts.get(r.master_account_id, r.master_account_id) if r.master_account_id else "-",
+            "slave_name": accounts.get(r.slave_account_id, r.slave_account_id) if r.slave_account_id else "-",
+            "slave_ticket": r.slave_ticket,
+            "symbol": r.symbol,
+            "volume": r.volume,
+            "price_open": r.price_open,
+            "direction": r.direction.value if r.direction else None,
+            "status": r.status.value if r.status else None,
+            "created_at": r.created_at.isoformat() if r.created_at else None,
+            "closed_at": r.closed_at.isoformat() if r.closed_at else None,
+        }
+        for r in rows
+    ]

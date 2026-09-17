@@ -561,6 +561,8 @@ def nt8_slave_executor(account_id: str, name: str, login: str, bridge_host: str,
         reload_config()
 
         if not _config["autocopy_enable"]:
+            payload_skip = cmd.get("payload", {})
+            logger.warning(f"{display}: SKIP comando {action} {payload_skip.get('symbol', '')} por autocopy desactivado (pausado)")
             continue
 
         action = cmd.get("action")
