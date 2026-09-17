@@ -17,7 +17,7 @@ const links = [
 ];
 
 export function Sidebar() {
-  const { copierStatus, wsConnected, fetchStatus } = useStore();
+  const { copierStatus, wsConnected, version, fetchStatus } = useStore();
   const [starting, setStarting] = useState(false);
 
   useEffect(() => {
@@ -43,7 +43,7 @@ export function Sidebar() {
       <div className={cn('p-4 border-b border-zinc-800 text-center transition-all', copierStatus.running && 'border-emerald-500/40 shadow-[inset_0_-1px_0_rgba(34,197,94,0.2)]')}>
         <img src="/logo.png" alt="HydraX" className={cn('h-32 w-32 mx-auto mt-1 mb-2', copierStatus.running ? 'drop-shadow-[0_0_24px_rgba(34,197,94,0.7)]' : 'drop-shadow-[0_0_8px_rgba(34,197,94,0.2)]')} />
         <h1 className="text-xl font-extrabold text-emerald-400 tracking-tight" style={{fontFamily: 'Inter, sans-serif'}}>HydraX</h1>
-        <span className="text-xs text-zinc-500">Trade Copier v2.55</span>
+        <span className="text-xs text-zinc-500">Trade Copier v{version || "..."}</span>
       </div>
 
       <nav className="flex-1 p-3 space-y-1">
@@ -78,8 +78,8 @@ export function Sidebar() {
             <span className={cn('ml-auto text-[10px]', copierStatus.nt8_connected ? 'text-zinc-500' : 'text-red-400/70')}>{copierStatus.nt8_connected ? 'Conectado' : 'Desconectado'}</span>
           </div>
           <div className="flex items-center gap-2">
-            <span className={cn('inline-block h-2 w-2 rounded-full', copierStatus.mt5_connected ? 'bg-orange-400 shadow-[0_0_6px_#fb923c]' : 'bg-red-500 shadow-[0_0_6px_#ef4444]')} />
-            <span className={cn('text-[10px] font-medium', copierStatus.mt5_connected ? 'text-orange-400' : 'text-red-400')}>MT5</span>
+            <span className={cn('inline-block h-2 w-2 rounded-full', copierStatus.mt5_connected ? 'bg-emerald-500 shadow-[0_0_6px_#10b981]' : 'bg-red-500 shadow-[0_0_6px_#ef4444]')} />
+            <span className={cn('text-[10px] font-medium', copierStatus.mt5_connected ? 'text-emerald-400' : 'text-red-400')}>MT5</span>
             <span className={cn('ml-auto text-[10px]', copierStatus.mt5_connected ? 'text-zinc-500' : 'text-red-400/70')}>{copierStatus.mt5_connected ? 'Conectado' : 'Desconectado'}</span>
           </div>
         </div>
