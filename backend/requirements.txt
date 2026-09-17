@@ -1,0 +1,9 @@
+fastapi
+uvicorn[standard]
+sqlalchemy
+pydantic
+pydantic-settings
+cryptography
+websockets
+python-multipart
+MetaTrader5

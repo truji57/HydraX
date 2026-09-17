@@ -1,0 +1,207 @@
+[
+    {
+        "date":  "2026-09-17",
+        "description":  "Salto a v2: HydraX pasa a ser una app multiplataforma que gestiona en una sola instancia cuentas de NinjaTrader 8 y MetaTrader 5. Motor MT5 reintroducido (workers mt5_master_monitor/mt5_slave_executor), aislamiento de plataforma al enlazar masters/slaves, selector de plataforma al crear cuentas, stats MT5 en dashboard, indicadores de conexion NT8/MT5 en sidebar y rebranding a HydraX (Trade Copier v2.55)",
+        "version":  "v2.55"
+    },
+    {
+        "date":  "2026-09-08",
+        "description":  "Persistir los Eventos recientes en BD (modelo event_log + endpoint /api/events + poda a 1000) para que no se pierdan al cambiar de navegador o dispositivo",
+        "version":  "v1.55"
+    },
+    {
+        "date":  "2026-09-08",
+        "description":  "Filtrar cuentas inactivas (balance 0 sin datos) del desplegable de cuentas NT8 al crear/editar master o slave",
+        "version":  "v1.54"
+    },
+    {
+        "date":  "2026-09-08",
+        "description":  "Revertir campo connected (ConnectionStatus) del bridge, no existe en la API Cbi de NT8; la deteccion de cuentas inactivas queda via fallback del backend (balance 0 sin datos) sin recompilar el AddOn",
+        "version":  "v1.53"
+    },
+    {
+        "date":  "2026-09-07",
+        "description":  "Detectar cuentas inactivas en el dashboard: campo connected en el bridge (ConnectionStatus real de NT8) + fallback en backend para cuentas balance 0 sin datos; tarjeta roja 'SIN CONEXION CON CUENTA' [Requiere recompilar el AddOn .cs]",
+        "version":  "v1.52"
+    },
+    {
+        "date":  "2026-09-02",
+        "description":  "Aviso en el dashboard cuando una cuenta configurada ya no existe en la conexion actual de NT8: tarjeta roja con overlay 'SIN CONEXION CON CUENTA' (campo connected por cuenta)",
+        "version":  "v1.51"
+    },
+    {
+        "date":  "2026-09-02",
+        "description":  "Desplegable de cuentas NT8 disponibles al crear/editar master o slave (accion ACCOUNTS en el bridge) + modal de confirmacion al eliminar plantillas [Requiere recompilar el AddOn .cs]",
+        "version":  "v1.50"
+    },
+    {
+        "date":  "2026-09-02",
+        "description":  "Indicadores de conexion en el sidebar: BACKEND (via WebSocket) y NT8 (sonda TCP heartbeat al bridge cada 3s) con punto de color, polling en vivo",
+        "version":  "v1.49"
+    },
+    {
+        "date":  "2026-09-02",
+        "description":  "Mover backend a puerto 8006 para coexistir con Q7 (backend de Q7 usa :8005); eliminar start_backend.bat; sacar setup.bat del repo e ignorar AGENTS.md/setup.bat",
+        "version":  "v1.48"
+    },
+    {
+        "date":  "2026-07-09",
+        "description":  "Fix: bridge SL/TP direction check + close debounce (1-cycle) previene cierres falsos en slaves al colocar ordenes LIMIT de entrada [Requiere recompilar el AddOn .cs: copiar bridge/NT8HydraX.cs a Documents\\NinjaTrader 8\\bin\\Custom\\AddOns\\ y F5 en NinjaScript Editor]",
+        "version":  "v1.47"
+    },
+    {
+        "date":  "2026-07-09",
+        "description":  "Fix: limites % usan balance inicial del dia, no el balance actual",
+        "version":  "v1.46"
+    },
+    {
+        "date":  "2026-07-09",
+        "description":  "Limites diarios USD/% + Protecciones visibles en Dashboard [Prot: -X$ | +X$]",
+        "version":  "v1.45"
+    },
+    {
+        "date":  "2026-07-07",
+        "description":  "Log limits check a DEBUG (menos ruido) + fix bridge hydrax_config editable desde proyecto",
+        "version":  "v1.44"
+    },
+    {
+        "date":  "2026-07-06",
+        "description":  "Fix TCP persistente: bridge while(true) + conector con reintento",
+        "version":  "v1.43"
+    },
+    {
+        "date":  "2026-07-04",
+        "description":  "Puerto bridge configurable desde Ajustes + copia archivos a NT8 + puerto automatico en cuentas",
+        "version":  "v1.42"
+    },
+    {
+        "date":  "2026-07-04",
+        "description":  "Fix M7 (dashboard stats paralelo con ThreadPoolExecutor)",
+        "version":  "v1.41"
+    },
+    {
+        "date":  "2026-07-04",
+        "description":  "Fix M4 (race condition monitor workers) + M5 (singleton thread-safe)",
+        "version":  "v1.40"
+    },
+    {
+        "date":  "2026-07-04",
+        "description":  "Notificacion de nueva version disponible en Ajustes + boton Copiar Bridge a NT8",
+        "version":  "v1.39"
+    },
+    {
+        "date":  "2026-07-04",
+        "description":  "Boton Copiar Bridge a NT8 en Ajustes + fix Emergency Close ticket especifico",
+        "version":  "v1.38"
+    },
+    {
+        "date":  "2026-07-04",
+        "description":  "Auditoria completada: criticos (WAL + hash MD5 + TCP persistente) + altos (H1-H8 excepto H4). Estabilidad validada.",
+        "version":  "v1.37"
+    },
+    {
+        "date":  "2026-07-04",
+        "description":  "Fix H6 (Emergency Close solo cierra ticket especifico) + H8 (broadcast con event loop unico) + reorden sidebar",
+        "version":  "v1.36"
+    },
+    {
+        "date":  "2026-07-03",
+        "description":  "Fix H2 (fuga sesiones BD con try/finally) + H5 (colas slaves con maxsize=100)",
+        "version":  "v1.35"
+    },
+    {
+        "date":  "2026-07-03",
+        "description":  "Auditoria critica: SQLite WAL + hash estable MD5 + TCP persistente + fix reconciliacion posiciones",
+        "version":  "v1.34"
+    },
+    {
+        "date":  "2026-07-02",
+        "description":  "Changelog de versiones en Ajustes + /commit actualiza changelog automaticamente",
+        "version":  "v1.33"
+    },
+    {
+        "version":  "v1.32",
+        "date":  "2026-07-02",
+        "description":  "Fix plantilla no visible al pausar slave + cierre de formulario al guardar + log de contratos mejorado"
+    },
+    {
+        "version":  "v1.31",
+        "date":  "2026-07-02",
+        "description":  "Flatten All: boton Cerrar Todo para cerrar posiciones de todos los slaves a la vez"
+    },
+    {
+        "version":  "v1.30",
+        "date":  "2026-07-02",
+        "description":  "Balance y P\u0026L diario en tarjetas del Dashboard"
+    },
+    {
+        "version":  "v1.29",
+        "date":  "2026-07-01",
+        "description":  "Fix migracion last_pnl_reset automatico para nuevos usuarios"
+    },
+    {
+        "version":  "v1.28",
+        "date":  "2026-07-01",
+        "description":  "Fix migracion paused_by_limit + label ambar en plantillas + limpieza huerfanas + BALANCE_PROP fallback"
+    },
+    {
+        "version":  "v1.27",
+        "date":  "2026-07-01",
+        "description":  "Limites diarios Prop Firm con cierre automatico y reset diario + badge PROT"
+    },
+    {
+        "version":  "v1.26",
+        "date":  "2026-07-01",
+        "description":  "Limites diarios Prop Firm: cierre automatico + badge PROT + auto-refresh config + formulario inline"
+    },
+    {
+        "version":  "v1.25",
+        "date":  "2026-07-01",
+        "description":  "Eliminado campo password innecesario de formularios de cuentas"
+    },
+    {
+        "version":  "v1.24",
+        "date":  "2026-06-28",
+        "description":  "Puerto del bridge configurable via hydrax_config.json + setup.bat para nuevos usuarios"
+    },
+    {
+        "version":  "v1.23",
+        "date":  "2026-06-28",
+        "description":  "OCO SL/TP en bridge + deteccion TP/SL por memoria + pausa/reanudar sin reinicio"
+    },
+    {
+        "version":  "v1.22",
+        "date":  "2026-06-28",
+        "description":  "UI responsiva para movil: sidebar colapsable + grids adaptables"
+    },
+    {
+        "version":  "v1.21",
+        "date":  "2026-06-28",
+        "description":  "Formularios inline cuentas + boton ARRANCANDO + cierre solo manual + revert cleanup"
+    },
+    {
+        "version":  "v1.20",
+        "date":  "2026-06-27",
+        "description":  "Migracion template_id faltante en VPS"
+    },
+    {
+        "version":  "v1.19",
+        "date":  "2026-06-27",
+        "description":  "Modal eliminacion cuenta + fix cascade delete DB"
+    },
+    {
+        "version":  "v1.18",
+        "date":  "2026-06-27",
+        "description":  "Verificacion de bridge al iniciar + toast de error en RUN"
+    },
+    {
+        "version":  "v1.17",
+        "date":  "2026-06-27",
+        "description":  "Badge RUNNING/STOPPED mas grande + update.bat fix"
+    },
+    {
+        "version":  "v1.16",
+        "date":  "2026-06-27",
+        "description":  "Worker error events + update.bat lock fix"
+    }
+]

@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.py[cod]
+*.db
+*.db-shm
+*.db-wal
+venv/
+
+# Node
+frontend/node_modules/
+frontend/dist/
+frontend/.vite-temp/
+
+# IDE
+.vscode/
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Bridge build
+bridge/bin/
+bridge/obj/
+bridge/publish/
+
+# MT5 (credenciales/servidores locales nunca se suben)
+terraform/*.mt5
+*.servers.json
+
+# Project (contexto local, no se sube)
+*.md
+OldVersion/
+opencode.json
+AGENTS.md
+setup.bat
