@@ -97,7 +97,7 @@ def open_position(symbol: str, volume: float, side: str, sl: float = 0, tp: floa
             continue
         if result.retcode == mt5.TRADE_RETCODE_DONE:
             return {"ok": True, "position_id": int(result.order), "price": price}
-        last_error = result.comment or f"retcode {result.retcode}"
+        last_error = f"{result.comment or 'retcode'} (retcode {result.retcode})"
 
     return {"ok": False, "error": f"open fallo: {last_error}"}
 
@@ -199,6 +199,26 @@ def get_last_error():
         return mt5.last_error()
     except Exception:
         return None
+
+
+def effective_tick_value(symbol_info: dict) -> float:
+    """Tick value por lote corregido.
+
+    MT5 puede reportar trade_tick_value escalado (~10x menor en metales como
+    XAUUSD, p. ej. 0.1 en vez de 1.0 con contract=100 y tick_size=0.01).
+    El valor real derivado es contract_size * tick_size; usamos el maximo de
+    ambos para no subestimar el riesgo.
+    """
+    try:
+        reported = float(symbol_info.get("trade_tick_value") or 0)
+        ts = float(symbol_info.get("trade_tick_size") or 0)
+        contract = float(symbol_info.get("trade_contract_size") or 0)
+        derived = contract * ts
+        if reported > 0 and derived > reported:
+            return derived
+        return reported if reported > 0 else derived
+    except Exception:
+        return float(symbol_info.get("trade_tick_value") or 0)
 
 
 def test_connection(login: int, password: str, server: str, terminal_path: str) -> dict:

@@ -1,6 +1,11 @@
 [
     {
         "date":  "2026-09-17",
+        "description":  "Fix riesgo MT5 en metales/indices: tick_value escalado del broker (XAUUSD 0.1 en vez de 1.0) hacia arriesgar 10x; ahora se usa max(reportado, contract_size x tick_size). Errores de orden con retcode numerico para diagnosticar rechazos del broker",
+        "version":  "v2.61"
+    },
+    {
+        "date":  "2026-09-17",
         "description":  "Fix crash del monitor master MT5: stats_counter sin inicializar provocaba UnboundLocalError y reinicios en bucle, impidiendo copiar/reportar posiciones",
         "version":  "v2.60"
     },

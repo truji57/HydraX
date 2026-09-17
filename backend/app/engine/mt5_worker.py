@@ -559,11 +559,12 @@ def mt5_slave_executor(account_id: str, name: str, login: int, password_enc: str
                             mark_pending_error(master_ticket, account_id)
                             continue
                         try:
+                            tick_value = mt5_helpers.effective_tick_value(sym_info)
                             lots = calculate_lots_risk_percent(
                                 float(info.get("balance", 0) or 0), _config["risk_percent"],
                                 entry_price, sl,
                                 float(sym_info.get("trade_tick_size", 0) or 0),
-                                float(sym_info.get("trade_tick_value", 0) or 0),
+                                tick_value,
                                 float(sym_info.get("volume_min", 0.01) or 0.01),
                                 float(sym_info.get("volume_step", 0.01) or 0.01),
                             )
@@ -584,10 +585,11 @@ def mt5_slave_executor(account_id: str, name: str, login: int, password_enc: str
                             mark_pending_error(master_ticket, account_id)
                             continue
                         try:
+                            tick_value = mt5_helpers.effective_tick_value(sym_info)
                             lots = calculate_lots_risk_usd(
                                 _config["risk_usd"], entry_price, sl,
                                 float(sym_info.get("trade_tick_size", 0) or 0),
-                                float(sym_info.get("trade_tick_value", 0) or 0),
+                                tick_value,
                                 float(sym_info.get("volume_min", 0.01) or 0.01),
                                 float(sym_info.get("volume_step", 0.01) or 0.01),
                             )
