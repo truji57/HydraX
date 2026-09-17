@@ -194,6 +194,13 @@ def mt5_available() -> bool:
         return False
 
 
+def get_last_error():
+    try:
+        return mt5.last_error()
+    except Exception:
+        return None
+
+
 def test_connection(login: int, password: str, server: str, terminal_path: str) -> dict:
     connected = connect_mt5(login, password, server, terminal_path)
     if not connected:

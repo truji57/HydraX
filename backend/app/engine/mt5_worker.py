@@ -115,9 +115,10 @@ def mt5_master_monitor(account_id: str, name: str, login: int, password_enc: str
     display = name or f"mt5-master-{login}"
 
     if not connect_mt5(int(login), _decrypt_password(password_enc), server, terminal_path):
-        logger.error(f"{display}: connection failed")
+        err = mt5_helpers.get_last_error()
+        logger.error(f"{display}: connection failed: {err}")
         _emit_event(event_queue, "worker_error", {"worker": display, "role": "master",
-                                                  "error": f"No se pudo conectar a MT5 ({server})"})
+                                                  "error": f"No se pudo conectar a MT5 ({server}): {err}"})
         return
 
     logger.info(f"{display}: connected to {server}")
@@ -284,9 +285,10 @@ def mt5_slave_executor(account_id: str, name: str, login: int, password_enc: str
     display = name or f"mt5-slave-{login}"
 
     if not connect_mt5(int(login), _decrypt_password(password_enc), server, terminal_path):
-        logger.error(f"{display}: connection failed")
+        err = mt5_helpers.get_last_error()
+        logger.error(f"{display}: connection failed: {err}")
         _emit_event(event_queue, "worker_error", {"worker": display, "role": "slave",
-                                                  "error": f"No se pudo conectar a MT5 ({server})"})
+                                                  "error": f"No se pudo conectar a MT5 ({server}): {err}"})
         return
 
     logger.info(f"{display}: connected to {server}")

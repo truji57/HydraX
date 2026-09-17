@@ -1,6 +1,11 @@
 [
     {
         "date":  "2026-09-17",
+        "description":  "Diagnostico de conexion MT5: los workers reportan el error real de MetaTrader5 (mt5.last_error) en los fallos de conexion; silenciados los access logs de uvicorn en start.bat (--no-access-log)",
+        "version":  "v2.59"
+    },
+    {
+        "date":  "2026-09-17",
         "description":  "Version dinamica en el sidebar (Trade Copier vX.Y via git) e indicador MT5 en verde al conectar (antes naranja)",
         "version":  "v2.58"
     },

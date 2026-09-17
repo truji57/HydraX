@@ -12,7 +12,7 @@ REM Kill any existing backend on port 8006
 for /f "tokens=5" %%a in ('netstat -ano ^| findstr :8006 ^| findstr LISTENING') do taskkill /F /PID %%a 2>nul
 timeout /t 2 /nobreak >nul
 
-start "HydraX - Backend" cmd /k "start "" /b call ""%~dp0title_keeper.bat"" ""HydraX - Backend"" & cd /d %~dp0backend & python -m uvicorn app.main:app --host 0.0.0.0 --port 8006"
+start "HydraX - Backend" cmd /k "start "" /b call ""%~dp0title_keeper.bat"" ""HydraX - Backend"" & cd /d %~dp0backend & python -m uvicorn app.main:app --host 0.0.0.0 --port 8006 --no-access-log"
 timeout /t 3 /nobreak >nul
 start "HydraX - Frontend" cmd /k "start "" /b call ""%~dp0title_keeper.bat"" ""HydraX - Frontend"" & cd /d %~dp0frontend & npx vite --host 0.0.0.0 --port 5173"
 timeout /t 2 /nobreak >nul
