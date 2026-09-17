@@ -1,6 +1,11 @@
 [
     {
         "date":  "2026-09-17",
+        "description":  "Ventanas con titulo HydraX (title_keeper reaplica el titulo cada segundo frente a node/vite) y rebranding en start/update.bat",
+        "version":  "v2.56"
+    },
+    {
+        "date":  "2026-09-17",
         "description":  "Salto a v2: HydraX pasa a ser una app multiplataforma que gestiona en una sola instancia cuentas de NinjaTrader 8 y MetaTrader 5. Motor MT5 reintroducido (workers mt5_master_monitor/mt5_slave_executor), aislamiento de plataforma al enlazar masters/slaves, selector de plataforma al crear cuentas, stats MT5 en dashboard, indicadores de conexion NT8/MT5 en sidebar y rebranding a HydraX (Trade Copier v2.55)",
         "version":  "v2.55"
     },

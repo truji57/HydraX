@@ -1,8 +1,9 @@
 @echo off
+title HydraX - Actualizacion
 cd /d "%~dp0"
 
 echo ============================
-echo    HydraX-NT - Actualizacion
+echo    HydraX - Actualizacion
 echo ============================
 echo.
 
@@ -14,7 +15,7 @@ echo       Listo.
 echo.
 
 echo [2/3] Buscando actualizaciones...
-git remote set-url origin https://github.com/truji57/HydraX-NT.git
+git remote set-url origin https://github.com/truji57/HydraX.git
 del /f /q ".git\index.lock" 2>nul
 for /f "delims=" %%h in ('git rev-parse HEAD') do set LOCAL=%%h
 echo n | git fetch origin
