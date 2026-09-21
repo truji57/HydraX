@@ -95,8 +95,12 @@ def open_position(symbol: str, volume: float, side: str, sl: float = 0, tp: floa
         return {"ok": False, "error": f"no tick para {symbol}"}
     price = tick.ask if order_type == mt5.ORDER_TYPE_BUY else tick.bid
 
+    fill_names = {mt5.ORDER_FILLING_FOK: "FOK", mt5.ORDER_FILLING_IOC: "IOC",
+                  mt5.ORDER_FILLING_RETURN: "RETURN", mt5.ORDER_FILLING_BOC: "BOC"}
+    attempted = []
     last_error = "todos los filling modes fallaron"
     for filling in _filling_candidates(symbol):
+        attempted.append(fill_names.get(filling, str(filling)))
         request = {
             "action": mt5.TRADE_ACTION_DEAL,
             "symbol": symbol,
@@ -121,7 +125,13 @@ def open_position(symbol: str, volume: float, side: str, sl: float = 0, tp: floa
             return {"ok": True, "position_id": int(result.order), "price": price}
         last_error = f"{result.comment or 'retcode'} (retcode {result.retcode})"
 
-    return {"ok": False, "error": f"open fallo: {last_error}"}
+    fill_mask = "?"
+    try:
+        si = mt5.symbol_info(symbol)
+        fill_mask = str(getattr(si, "filling_mode", "?") if si else "sin_symbol")
+    except Exception:
+        pass
+    return {"ok": False, "error": f"open fallo: {last_error} [intentados: {'/'.join(attempted)} | filling_mode={fill_mask}]"}
 
 
 def close_position(symbol: str, position: int, side: str, volume: Optional[float] = None,

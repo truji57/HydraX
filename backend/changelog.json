@@ -1,6 +1,11 @@
 [
     {
         "date":  "2026-09-17",
+        "description":  "Diagnostico en errores de apertura MT5: el fallo de open_position ahora incluye los modos de llenado probados y el filling_mode del simbolo para cerrar el caso del retcode 10030 en XAUUSD.raw",
+        "version":  "v2.64"
+    },
+    {
+        "date":  "2026-09-17",
         "description":  "Filling modes robusto (estilo TelBot) en MT5: primero los modos declarados por el simbolo (filling_mode) y luego la secuencia RETURN->FOK->IOC, resolviendo brokers raw/instant que rechazaban con 'Unsupported filling mode' (retcode 10030)",
         "version":  "v2.63"
     },
