@@ -170,6 +170,7 @@ def _migrate_platform():
                 "platform": "ALTER TABLE accounts ADD COLUMN platform VARCHAR(10) DEFAULT 'NT8'",
                 "server": "ALTER TABLE accounts ADD COLUMN server VARCHAR(100) DEFAULT NULL",
                 "terminal_path": "ALTER TABLE accounts ADD COLUMN terminal_path VARCHAR(300) DEFAULT NULL",
+                "filling_mode": "ALTER TABLE accounts ADD COLUMN filling_mode VARCHAR(10) DEFAULT NULL",
             }
             for col, ddl in columns.items():
                 result = conn.exec_driver_sql(

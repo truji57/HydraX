@@ -13,7 +13,7 @@ import { Plus, Trash2, Wifi, X, Edit3, FolderOpen } from 'lucide-react';
 const emptyForm: AccountForm = {
   name: '', role: 'MASTER', platform: 'NT8', login: '',
   password: '', bridge_host: 'localhost', bridge_port: 5555,
-  server: '', terminal_path: '', poll_interval: 0.5,
+  server: '', terminal_path: '', filling_mode: '', poll_interval: 0.5,
   active: true, color: '#3b82f6',
 };
 
@@ -53,6 +53,15 @@ function AccountFormBody({ form, setForm, editing, loginOptions, manualLogin, se
             </Select>
             {manualServer && <Input className="mt-2" value={form.server} onChange={e => setForm({...form, server: e.target.value})} placeholder="ICMarkets-Demo" />}
             {mt5Servers.length === 0 && !manualServer && <p className="text-[11px] text-zinc-500 mt-1">No hay servidores configurados. Anadelos en Preferencias.</p>}
+          </div>
+          <div><Label>Filling Mode</Label>
+            <Select value={form.filling_mode || ''} onChange={e => setForm({...form, filling_mode: e.target.value})}>
+              <option value="">AUTO (detectar)</option>
+              <option value="FOK">FOK</option>
+              <option value="IOC">IOC</option>
+              <option value="RETURN">RETURN</option>
+            </Select>
+            <p className="text-[11px] text-zinc-500 mt-1">Si el broker rechaza con 'Unsupported filling mode', prueba aqui el modo que exige.</p>
           </div>
           <div><Label>Terminal (terminal64.exe, opcional)</Label>
             <div className="flex gap-2">
@@ -260,6 +269,7 @@ export default function AccountsPage() {
       name: a.name, role: a.role, platform: a.platform || 'NT8', login: a.login,
       password: '', bridge_host: a.bridge_host, bridge_port: a.bridge_port,
       server: a.server || '', terminal_path: a.terminal_path || '',
+      filling_mode: a.filling_mode || '',
       poll_interval: a.poll_interval, active: a.active, color: a.color || '#3b82f6',
     });
   };

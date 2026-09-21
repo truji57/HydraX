@@ -19,12 +19,22 @@ def get_account(db: Session, account_id: str) -> Optional[Account]:
     return db.query(Account).filter(Account.id == account_id).first()
 
 
+def _norm_filling(value):
+    if value is None:
+        return None
+    v = str(value).strip().upper()
+    if v in ("", "AUTO"):
+        return None
+    return v if v in ("FOK", "IOC", "RETURN") else None
+
+
 def create_account(db: Session, data: AccountCreate) -> Account:
     account = Account(
         name=data.name, role=data.role, platform=data.platform, login=data.login,
         password=encrypt_password(data.password),
         bridge_host=data.bridge_host, bridge_port=data.bridge_port,
         server=data.server, terminal_path=data.terminal_path,
+        filling_mode=_norm_filling(data.filling_mode),
         poll_interval=data.poll_interval, active=data.active,
     )
     db.add(account)
@@ -45,6 +55,8 @@ def update_account(db: Session, account_id: str, data: AccountUpdate) -> Optiona
         update_data["password"] = encrypt_password(update_data["password"])
     old_role = account.role
     for key, value in update_data.items():
+        if key == "filling_mode":
+            value = _norm_filling(value)
         setattr(account, key, value)
     if old_role != "SLAVE" and account.role == "SLAVE":
         existing = db.query(SlaveConfig).filter(SlaveConfig.account_id == account_id).first()

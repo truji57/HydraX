@@ -33,6 +33,27 @@ def _filling_candidates(symbol: str) -> list:
     return modes
 
 
+def _ordered_fillings(symbol: str, forced: int | None) -> list:
+    """Candidatos con el forzado primero si la cuenta lo especifico (AUTO = None)."""
+    cands = _filling_candidates(symbol)
+    if forced is not None:
+        cands = [forced] + [c for c in cands if c != forced]
+    return cands
+
+
+def _resolve_filling(name) -> int | None:
+    if not name:
+        return None
+    n = str(name).strip().upper()
+    if n == "FOK":
+        return mt5.ORDER_FILLING_FOK
+    if n == "IOC":
+        return mt5.ORDER_FILLING_IOC
+    if n == "RETURN":
+        return mt5.ORDER_FILLING_RETURN
+    return None
+
+
 def connect_mt5(login: int, password: str, server: str, terminal_path: str) -> bool:
     if not mt5.initialize(path=terminal_path):
         return False
@@ -88,7 +109,8 @@ def get_history_deals_since(start: datetime) -> list[dict]:
 
 
 def open_position(symbol: str, volume: float, side: str, sl: float = 0, tp: float = 0,
-                  magic: int = 0, comment: str = "", deviation: int = 50) -> dict:
+                  magic: int = 0, comment: str = "", deviation: int = 50,
+                  filling: int | None = None) -> dict:
     order_type = mt5.ORDER_TYPE_BUY if side.upper() == "BUY" else mt5.ORDER_TYPE_SELL
     tick = mt5.symbol_info_tick(symbol)
     if tick is None:
@@ -99,8 +121,8 @@ def open_position(symbol: str, volume: float, side: str, sl: float = 0, tp: floa
                   mt5.ORDER_FILLING_RETURN: "RETURN", mt5.ORDER_FILLING_BOC: "BOC"}
     attempted = []
     last_error = "todos los filling modes fallaron"
-    for filling in _filling_candidates(symbol):
-        attempted.append(fill_names.get(filling, str(filling)))
+    for fm in _ordered_fillings(symbol, filling):
+        attempted.append(fill_names.get(fm, str(fm)))
         request = {
             "action": mt5.TRADE_ACTION_DEAL,
             "symbol": symbol,
@@ -113,7 +135,7 @@ def open_position(symbol: str, volume: float, side: str, sl: float = 0, tp: floa
             "magic": magic,
             "comment": comment or "",
             "type_time": mt5.ORDER_TIME_GTC,
-            "type_filling": filling,
+            "type_filling": fm,
         }
         try:
             result = mt5.order_send(request)
@@ -135,7 +157,8 @@ def open_position(symbol: str, volume: float, side: str, sl: float = 0, tp: floa
 
 
 def close_position(symbol: str, position: int, side: str, volume: Optional[float] = None,
-                   magic: int = 0, comment: str = "", deviation: int = 50) -> dict:
+                   magic: int = 0, comment: str = "", deviation: int = 50,
+                   filling: int | None = None) -> dict:
     if volume is None:
         pos = next((p for p in (mt5.positions_get() or []) if int(p.ticket) == int(position)), None)
         if pos is None:
@@ -150,7 +173,7 @@ def close_position(symbol: str, position: int, side: str, volume: Optional[float
 
     last_error = "intentos agotados"
     for attempt in range(1, MAX_RETRIES + 1):
-        for filling in _filling_candidates(symbol):
+        for fm in _ordered_fillings(symbol, filling):
             request = {
                 "action": mt5.TRADE_ACTION_DEAL,
                 "symbol": symbol,
@@ -162,7 +185,7 @@ def close_position(symbol: str, position: int, side: str, volume: Optional[float
                 "magic": magic,
                 "comment": comment or "",
                 "type_time": mt5.ORDER_TIME_GTC,
-                "type_filling": filling,
+                "type_filling": fm,
             }
             try:
                 result = mt5.order_send(request)

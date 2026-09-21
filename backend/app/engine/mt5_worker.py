@@ -273,7 +273,7 @@ def mt5_master_monitor(account_id: str, name: str, login: int, password_enc: str
 
 
 def mt5_slave_executor(account_id: str, name: str, login: int, password_enc: str,
-                       server: str, terminal_path: str,
+                       server: str, terminal_path: str, filling_mode: str | None,
                        risk_mode: str, risk_percent: float, risk_usd: float,
                        fixed_lots: float, lot_multiplier: float, max_lots: float,
                        max_positions: int, autocopy_enable: bool, copy_sl: bool,
@@ -296,8 +296,13 @@ def mt5_slave_executor(account_id: str, name: str, login: int, password_enc: str
 
     _emit_stats(event_queue, account_id)
 
+    _force_filling = mt5_helpers._resolve_filling(filling_mode)
+    if _force_filling is not None:
+        logger.info(f"{display}: filling mode forzado por cuenta: {filling_mode}")
+
     _config = {
         "risk_mode": risk_mode, "risk_percent": risk_percent, "risk_usd": risk_usd,
+        "filling_mode": filling_mode,
         "fixed_lots": fixed_lots, "lot_multiplier": lot_multiplier,
         "max_lots": max_lots, "max_positions": max_positions,
         "autocopy_enable": autocopy_enable, "copy_sl": copy_sl,
@@ -377,7 +382,7 @@ def mt5_slave_executor(account_id: str, name: str, login: int, password_enc: str
                 symbol = p.get("symbol", "")
                 side = "BUY" if int(p.get("type", 0)) == 0 else "SELL"
                 if ticket:
-                    close_position(symbol, ticket, side)
+                    close_position(symbol, ticket, side, filling=_force_filling)
                     logger.warning(f"{display}: limit-closed {symbol}")
         except Exception as e:
             logger.error(f"{display}: error closing positions on limit: {e}")
@@ -473,7 +478,7 @@ def mt5_slave_executor(account_id: str, name: str, login: int, password_enc: str
                         continue
                     symbol = p.get("symbol", "")
                     side = "BUY" if int(p.get("type", 0)) == 0 else "SELL"
-                    res = close_position(symbol, ticket, side)
+                    res = close_position(symbol, ticket, side, filling=_force_filling)
                     if res and res.get("ok"):
                         closed_ids.append(str(ticket))
                 if closed_ids:
@@ -616,7 +621,7 @@ def mt5_slave_executor(account_id: str, name: str, login: int, password_enc: str
                     continue
 
                 logger.info(f"{display}: OPEN {symbol} {direction} {lots:.2f} lots (mode={_config['risk_mode']} sl={sl} tp={tp})")
-                result = open_position(symbol, lots, direction, sl, tp, _config["magic_number"])
+                result = open_position(symbol, lots, direction, sl, tp, _config["magic_number"], filling=_force_filling)
                 if result and result.get("ok"):
                     slave_ticket = int(result["position_id"])
                     confirm_open(master_ticket, account_id, str(slave_ticket))
@@ -653,7 +658,7 @@ def mt5_slave_executor(account_id: str, name: str, login: int, password_enc: str
                         break
 
                 side = payload.get("side", "BUY")
-                result = close_position(symbol, int(slave_ticket), side, magic=_config["magic_number"])
+                result = close_position(symbol, int(slave_ticket), side, magic=_config["magic_number"], filling=_force_filling)
                 if result and result.get("ok"):
                     mark_closed(master_ticket, account_id)
                     _log_trade(master_account_id, account_id, TradeAction.CLOSE, symbol,

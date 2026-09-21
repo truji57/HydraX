@@ -12,6 +12,7 @@ export interface Account {
   bridge_port: number;
   server: string | null;
   terminal_path: string | null;
+  filling_mode: string | null;
   poll_interval: number;
   active: boolean;
   color: string;
@@ -31,6 +32,7 @@ export interface AccountForm {
   bridge_port: number;
   server?: string;
   terminal_path?: string;
+  filling_mode?: string;
   poll_interval: number;
   active: boolean;
   color: string;

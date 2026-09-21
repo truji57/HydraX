@@ -169,6 +169,7 @@ class CopierOrchestrator:
                         "platform": platform,
                         "bridge_host": slave.bridge_host, "bridge_port": slave.bridge_port,
                         "server": slave.server, "terminal_path": slave.terminal_path,
+                        "filling_mode": slave.filling_mode,
                         "password": slave.password,
                         "risk_mode": config.risk_mode.value if config.risk_mode else "FIXED",
                         "risk_percent": config.risk_percent or 0.5, "risk_usd": config.risk_usd or 50.0,
@@ -282,6 +283,7 @@ class CopierOrchestrator:
         return (
             cfg["account_id"], cfg["name"], self._safe_int(cfg["login"]),
             cfg["password"], cfg["server"] or "", cfg["terminal_path"] or "",
+            cfg.get("filling_mode"),
             cfg["risk_mode"], cfg["risk_percent"], cfg["risk_usd"],
             float(cfg.get("fixed_lots", 0.01) or 0.01),
             cfg["lot_multiplier"],

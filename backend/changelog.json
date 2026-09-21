@@ -1,6 +1,11 @@
 [
     {
         "date":  "2026-09-17",
+        "description":  "Campo filling_mode por cuenta MT5 (AUTO/FOK/IOC/RETURN) en el formulario de Cuentas: permite forzar el modo de llenado que exige el broker (p. ej. RETURN en simbolos raw como XAUUSD.raw). AUTO (por defecto) conserva la deteccion automatica",
+        "version":  "v2.65"
+    },
+    {
+        "date":  "2026-09-17",
         "description":  "Diagnostico en errores de apertura MT5: el fallo de open_position ahora incluye los modos de llenado probados y el filling_mode del simbolo para cerrar el caso del retcode 10030 en XAUUSD.raw",
         "version":  "v2.64"
     },

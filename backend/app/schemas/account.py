@@ -14,6 +14,7 @@ class AccountBase(BaseModel):
     bridge_port: int = 5555
     server: Optional[str] = None
     terminal_path: Optional[str] = None
+    filling_mode: Optional[str] = None
     poll_interval: float = Field(0.5, ge=0.1)
     active: bool = True
     color: str = "#3b82f6"
@@ -34,6 +35,7 @@ class AccountUpdate(BaseModel):
     bridge_port: Optional[int] = None
     server: Optional[str] = None
     terminal_path: Optional[str] = None
+    filling_mode: Optional[str] = None
     poll_interval: Optional[float] = Field(None, ge=0.1)
     active: Optional[bool] = None
     color: Optional[str] = None
@@ -50,6 +52,7 @@ class AccountResponse(BaseModel):
     bridge_port: int
     server: Optional[str] = None
     terminal_path: Optional[str] = None
+    filling_mode: Optional[str] = None
     poll_interval: float
     active: bool
     color: str

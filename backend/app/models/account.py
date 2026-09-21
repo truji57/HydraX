@@ -50,6 +50,7 @@ class Account(Base):
     bridge_port = Column(Integer, default=5555)
     server = Column(String(100), nullable=True)
     terminal_path = Column(String(300), nullable=True)
+    filling_mode = Column(String(10), nullable=True)
     poll_interval = Column(Float, default=0.5)
     active = Column(Boolean, default=True)
     color = Column(String(7), default="#3b82f6")
