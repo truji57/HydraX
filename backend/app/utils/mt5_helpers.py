@@ -6,9 +6,31 @@ import MetaTrader5 as mt5
 
 from app.config import settings
 
-FILLING_MODES = [mt5.ORDER_FILLING_FOK, mt5.ORDER_FILLING_IOC, mt5.ORDER_FILLING_RETURN]
 MAX_RETRIES = 5
 RETRY_DELAY = 0.5
+
+
+def _filling_candidates(symbol: str) -> list:
+    """Modos de llenado a probar, del mas probable al menos probable.
+
+    1) Modos que el broker declara para el simbolo (filling_mode: 1=FOK, 2=IOC, 64=RETURN).
+    2) Secuencia de respaldo tipo TelBot: RETURN -> FOK -> IOC (dedupe), que resuelve
+       los simbolos "raw"/instant que exigen RETURN aunque el mask no lo liste.
+    """
+    modes = []
+    try:
+        si = mt5.symbol_info(symbol)
+        mask = int(getattr(si, "filling_mode", 0) or 0)
+    except Exception:
+        mask = 0
+    if mask:
+        for bit, mode in ((1, mt5.ORDER_FILLING_FOK), (2, mt5.ORDER_FILLING_IOC), (64, mt5.ORDER_FILLING_RETURN)):
+            if mask & bit:
+                modes.append(mode)
+    for m in (mt5.ORDER_FILLING_RETURN, mt5.ORDER_FILLING_FOK, mt5.ORDER_FILLING_IOC):
+        if m not in modes:
+            modes.append(m)
+    return modes
 
 
 def connect_mt5(login: int, password: str, server: str, terminal_path: str) -> bool:
@@ -74,7 +96,7 @@ def open_position(symbol: str, volume: float, side: str, sl: float = 0, tp: floa
     price = tick.ask if order_type == mt5.ORDER_TYPE_BUY else tick.bid
 
     last_error = "todos los filling modes fallaron"
-    for filling in FILLING_MODES:
+    for filling in _filling_candidates(symbol):
         request = {
             "action": mt5.TRADE_ACTION_DEAL,
             "symbol": symbol,
@@ -118,7 +140,7 @@ def close_position(symbol: str, position: int, side: str, volume: Optional[float
 
     last_error = "intentos agotados"
     for attempt in range(1, MAX_RETRIES + 1):
-        for filling in FILLING_MODES:
+        for filling in _filling_candidates(symbol):
             request = {
                 "action": mt5.TRADE_ACTION_DEAL,
                 "symbol": symbol,
