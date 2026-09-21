@@ -40,6 +40,32 @@ def edit_server(server_id: str, data: ServerUpdate, db: Session = Depends(get_db
     return server
 
 
+@router.get("/export")
+def export_servers(db: Session = Depends(get_db)):
+    servers = [{"name": s.name, "platform": (s.platform.value if s.platform else "MT5")}
+               for s in server_service.get_servers(db)]
+    return {"app": "hydrax", "kind": "servers", "version": 1, "servers": servers}
+
+
+@router.post("/import")
+def import_servers(data: dict, db: Session = Depends(get_db)):
+    existing = {s.name.lower(): s for s in server_service.get_servers(db)}
+    count = 0
+    for item in data.get("servers", []):
+        name = (item.get("name") or "").strip()
+        if not name:
+            continue
+        platform = item.get("platform") or "MT5"
+        if name.lower() in existing:
+            existing[name.lower()].platform = platform
+        else:
+            server_service.create_server(db, name, platform)
+        count += 1
+    db.commit()
+    record_event(db, "server_imported", {"servers": count})
+    return {"ok": True, "imported": count}
+
+
 @router.delete("/{server_id}", status_code=204)
 def remove_server(server_id: str, db: Session = Depends(get_db)):
     server = next((s for s in server_service.get_servers(db) if s.id == server_id), None)

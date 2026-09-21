@@ -5,6 +5,8 @@ import { Input, Select, Label } from '../components/ui/input';
 import { Badge } from '../components/ui/badge';
 import { api } from '../lib/api';
 import { useStore } from '../store';
+import { downloadJson, todayStamp } from '../lib/share';
+import { ExportButton, ImportButton } from '../components/ui/sharebuttons';
 import { Plus, Trash2, Edit3, X, AlertTriangle, ChevronRight } from 'lucide-react';
 import { cn } from '../lib/utils';
 
@@ -118,6 +120,36 @@ export default function PreferencesPage() {
     catch (e: unknown) { showToast(e instanceof Error ? e.message : 'Error', 'error'); }
   };
 
+  const handleServersExport = async () => {
+    try {
+      const data = await api.get<Record<string, unknown>>('/servers/export');
+      downloadJson(`hydrax-servers-${todayStamp()}.json`, data);
+    } catch { showToast('Error al exportar', 'error'); }
+  };
+
+  const handleServersImport = async (data: Record<string, unknown>) => {
+    try {
+      const r = await api.post<{ ok: boolean; imported?: number; error?: string }>('/servers/import', data);
+      if (r.ok) { showToast(`Importados ${r.imported ?? 0} servidores`, 'ok'); loadServers(); }
+      else showToast(r.error || 'Error al importar', 'error');
+    } catch (e: unknown) { showToast(e instanceof Error ? e.message : 'Error al importar', 'error'); }
+  };
+
+  const handleSymbolsExport = async () => {
+    try {
+      const data = await api.get<Record<string, unknown>>('/symbols/export');
+      downloadJson(`hydrax-symbols-${todayStamp()}.json`, data);
+    } catch { showToast('Error al exportar', 'error'); }
+  };
+
+  const handleSymbolsImport = async (data: Record<string, unknown>) => {
+    try {
+      const r = await api.post<{ ok: boolean; imported?: number; error?: string }>('/symbols/import', data);
+      if (r.ok) { showToast(`Importadas ${r.imported ?? 0} entradas`, 'ok'); loadSymbols(); }
+      else showToast(r.error || 'Error al importar', 'error');
+    } catch (e: unknown) { showToast(e instanceof Error ? e.message : 'Error al importar', 'error'); }
+  };
+
   return (
     <div className="space-y-6">
       <div><h2 className="text-xl font-bold text-white">Preferencias</h2></div>
@@ -136,7 +168,11 @@ export default function PreferencesPage() {
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <p className="text-sm text-zinc-500">{servers.length} servidores</p>
-            <Button variant="primary" size="sm" onClick={() => { setEditingServer(null); setShowServerForm(true); }}><Plus size={14} /> Nuevo</Button>
+            <div className="flex gap-2">
+              <ExportButton label="Exportar" onClick={handleServersExport} disabled={servers.length === 0} />
+              <ImportButton label="Importar" onImport={handleServersImport} />
+              <Button variant="primary" size="sm" onClick={() => { setEditingServer(null); setShowServerForm(true); }}><Plus size={14} /> Nuevo</Button>
+            </div>
           </div>
 
           {(showServerForm || editingServer) && (
@@ -178,7 +214,11 @@ export default function PreferencesPage() {
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <p className="text-sm text-zinc-500">{symbolGroups.length} simbolos base · {symbols.length} entradas</p>
-            <Button variant="primary" size="sm" onClick={() => addSymbolFor('')}><Plus size={14} /> Nueva</Button>
+            <div className="flex gap-2">
+              <ExportButton label="Exportar" onClick={handleSymbolsExport} disabled={symbols.length === 0} />
+              <ImportButton label="Importar" onImport={handleSymbolsImport} />
+              <Button variant="primary" size="sm" onClick={() => addSymbolFor('')}><Plus size={14} /> Nueva</Button>
+            </div>
           </div>
           <p className="text-xs text-zinc-600">Ej: base <span className="text-emerald-400 font-mono">NAS100</span> → <span className="text-sky-400 font-mono">USTEC</span> en <span className="text-orange-400 font-mono">ICMarkets-Demo</span>. Se usa para traducir simbolos entre brokers MT5 distintos.</p>
 

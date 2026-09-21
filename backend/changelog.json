@@ -1,6 +1,11 @@
 [
     {
         "date":  "2026-09-17",
+        "description":  "Export/import por modulo para compartir: plantillas (hydrax-templates-*.json), servidores (hydrax-servers-*.json) y mapa de simbolos (hydrax-symbols-*.json), con merge por nombre. Backup general en Ajustes ampliado a TODA la configuracion (cuentas con platform/server/terminal/color y config completa, plantillas, servidores, simbolos)",
+        "version":  "v2.62"
+    },
+    {
+        "date":  "2026-09-17",
         "description":  "Fix riesgo MT5 en metales/indices: tick_value escalado del broker (XAUUSD 0.1 en vez de 1.0) hacia arriesgar 10x; ahora se usa max(reportado, contract_size x tick_size). Errores de orden con retcode numerico para diagnosticar rechazos del broker",
         "version":  "v2.61"
     },

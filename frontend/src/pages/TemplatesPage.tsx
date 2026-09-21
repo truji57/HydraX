@@ -5,6 +5,8 @@ import { Input, Select, Label, DecimalInput, Checkbox } from '../components/ui/i
 import { Badge } from '../components/ui/badge';
 import { api } from '../lib/api';
 import { useStore } from '../store';
+import { downloadJson, todayStamp } from '../lib/share';
+import { ExportButton, ImportButton } from '../components/ui/sharebuttons';
 import { riskLabels, GENERAL_MODES, templateKind, templateKindBadge } from '../lib/risk';
 import type { SlaveTemplate, RiskMode } from '../types';
 import { Plus, Trash2, X, Edit3, Copy, AlertTriangle } from 'lucide-react';
@@ -128,6 +130,21 @@ export default function TemplatesPage() {
     catch (e: unknown) { showToast(e instanceof Error ? e.message : 'Error', 'error'); }
   };
 
+  const handleExport = async () => {
+    try {
+      const data = await api.get<Record<string, unknown>>('/templates/export');
+      downloadJson(`hydrax-templates-${todayStamp()}.json`, data);
+    } catch { showToast('Error al exportar', 'error'); }
+  };
+
+  const handleImport = async (data: Record<string, unknown>) => {
+    try {
+      const r = await api.post<{ ok: boolean; imported?: number; error?: string }>('/templates/import', data);
+      if (r.ok) { showToast(`Importadas ${r.imported ?? 0} plantillas`, 'ok'); fetchTemplates(); }
+      else showToast(r.error || 'Error al importar', 'error');
+    } catch (e: unknown) { showToast(e instanceof Error ? e.message : 'Error al importar', 'error'); }
+  };
+
   const editTemplate = (t: SlaveTemplate) => {
     setEditing(t);
     setShowNewForm(false);
@@ -155,7 +172,11 @@ export default function TemplatesPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div><h2 className="text-xl font-bold text-white">Plantillas de Riesgo</h2><p className="text-sm text-zinc-500">{templates.length} plantillas</p></div>
-        <Button variant="primary" onClick={() => { resetForm(); setShowNewForm(true); }} disabled={copierRunning} title={copierRunning ? 'Para el copiador para crear plantillas' : ''}><Plus size={14} /> Nueva</Button>
+        <div className="flex gap-2">
+          <ExportButton label="Exportar" onClick={handleExport} disabled={copierRunning || templates.length === 0} />
+          <ImportButton label="Importar" onImport={handleImport} disabled={copierRunning} />
+          <Button variant="primary" onClick={() => { resetForm(); setShowNewForm(true); }} disabled={copierRunning} title={copierRunning ? 'Para el copiador para crear plantillas' : ''}><Plus size={14} /> Nueva</Button>
+        </div>
       </div>
 
       {showNewForm && (

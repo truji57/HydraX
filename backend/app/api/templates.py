@@ -1,13 +1,36 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.database import get_db
-from app.models.account import SlaveTemplate
+from app.models.account import SlaveTemplate, RiskMode, PnLMode
 from app.utils.events import record_event
 from app.schemas.account import (
     SlaveTemplateCreate, SlaveTemplateUpdate, SlaveTemplateResponse,
 )
 
 router = APIRouter(prefix="/api/templates", tags=["templates"])
+
+TEMPLATE_FIELDS = [
+    "risk_mode", "fixed_contracts", "fixed_lots", "risk_percent", "risk_usd",
+    "lot_multiplier", "max_contracts", "max_lots", "max_positions",
+    "autocopy_enable", "copy_sl", "copy_tp", "inverse_copy", "copy_modify",
+    "sync_close", "daily_loss_enabled", "daily_loss_limit", "daily_loss_mode",
+    "daily_profit_enabled", "daily_profit_limit", "daily_profit_mode",
+    "delay_sec", "magic_number",
+]
+
+
+def _enum_val(v):
+    return v.value if v is not None and hasattr(v, "value") else v
+
+
+def _coerce(payload: dict) -> dict:
+    for key in ("risk_mode",):
+        if payload.get(key):
+            payload[key] = RiskMode(payload[key])
+    for key in ("daily_loss_mode", "daily_profit_mode"):
+        if payload.get(key):
+            payload[key] = PnLMode(payload[key])
+    return payload
 
 
 @router.get("", response_model=list[SlaveTemplateResponse])
@@ -86,3 +109,36 @@ def delete_template(template_id: str, db: Session = Depends(get_db)):
     db.delete(t)
     db.commit()
     record_event(db, "template_deleted", {"name": name})
+
+
+@router.get("/export")
+def export_templates(db: Session = Depends(get_db)):
+    rows = db.query(SlaveTemplate).order_by(SlaveTemplate.name).all()
+    templates = []
+    for t in rows:
+        item = {"name": t.name}
+        for f in TEMPLATE_FIELDS:
+            item[f] = _enum_val(getattr(t, f))
+        templates.append(item)
+    return {"app": "hydrax", "kind": "templates", "version": 1, "templates": templates}
+
+
+@router.post("/import")
+def import_templates(data: dict, db: Session = Depends(get_db)):
+    existing = {t.name.lower(): t for t in db.query(SlaveTemplate).all()}
+    count = 0
+    for item in data.get("templates", []):
+        name = (item.get("name") or "").strip()
+        if not name:
+            continue
+        payload = _coerce({f: item.get(f) for f in TEMPLATE_FIELDS if f in item and item.get(f) is not None})
+        if name.lower() in existing:
+            t = existing[name.lower()]
+            for k, v in payload.items():
+                setattr(t, k, v)
+        else:
+            db.add(SlaveTemplate(name=name, **payload))
+        count += 1
+    db.commit()
+    record_event(db, "template_imported", {"templates": count})
+    return {"ok": True, "imported": count}

@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.database import get_db
+from app.models.symbol_map import SymbolMap
 from app.schemas.symbol import (
     SymbolMapCreate, SymbolMapUpdate, SymbolMapResponse, ServerListResponse,
 )
@@ -65,3 +66,36 @@ def list_distinct_servers(db: Session = Depends(get_db)):
 @router.get("/symbols", response_model=ServerListResponse)
 def list_distinct_symbols(db: Session = Depends(get_db)):
     return ServerListResponse(servers=get_distinct_symbols(db))
+
+
+@router.get("/export")
+def export_symbols(db: Session = Depends(get_db)):
+    rows = get_symbol_map(db)
+    symbols = [{"base_symbol": m.base_symbol, "broker_server": m.broker_server,
+                "broker_symbol": m.broker_symbol} for m in rows]
+    return {"app": "hydrax", "kind": "symbols", "version": 1, "symbols": symbols}
+
+
+@router.post("/import")
+def import_symbols(data: dict, db: Session = Depends(get_db)):
+    index = {}
+    for m in db.query(SymbolMap).all():
+        index[(m.base_symbol, m.broker_server)] = m
+
+    count = 0
+    for item in data.get("symbols", []):
+        base = (item.get("base_symbol") or "").strip()
+        server = (item.get("broker_server") or "").strip()
+        bsym = (item.get("broker_symbol") or "").strip()
+        if not base or not server or not bsym:
+            continue
+        entry = index.get((base, server))
+        if entry:
+            entry.broker_symbol = bsym
+        else:
+            db.add(SymbolMap(base_symbol=base, broker_server=server, broker_symbol=bsym))
+            index[(base, server)] = None
+        count += 1
+    db.commit()
+    record_event(db, "symbol_imported", {"symbols": count})
+    return {"ok": True, "imported": count}
