@@ -1,5 +1,10 @@
 [
     {
+        "date":  "2026-09-21",
+        "description":  "Manejo de 'AutoTrading deshabilitado' en MT5: cuando el servidor/cliente bloquea el trading automatico (retcode 10016/10017) los workers abortan con mensaje claro en vez de seguir probando fillings (esta era la causa real de los fallos en XAUUSD.raw, no el filling mode)",
+        "version":  "v2.66"
+    },
+    {
         "date":  "2026-09-17",
         "description":  "Campo filling_mode por cuenta MT5 (AUTO/FOK/IOC/RETURN) en el formulario de Cuentas: permite forzar el modo de llenado que exige el broker (p. ej. RETURN en simbolos raw como XAUUSD.raw). AUTO (por defecto) conserva la deteccion automatica",
         "version":  "v2.65"

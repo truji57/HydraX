@@ -145,6 +145,10 @@ def open_position(symbol: str, volume: float, side: str, sl: float = 0, tp: floa
             continue
         if result.retcode == mt5.TRADE_RETCODE_DONE:
             return {"ok": True, "position_id": int(result.order), "price": price}
+        if result.retcode in (mt5.TRADE_RETCODE_CLIENT_DISABLES_AT, mt5.TRADE_RETCODE_SERVER_DISABLES_AT):
+            side_txt = "CLIENTE" if result.retcode == mt5.TRADE_RETCODE_CLIENT_DISABLES_AT else "SERVIDOR"
+            return {"ok": False, "error": (f"AutoTrading deshabilitado ({side_txt}, retcode {result.retcode}): "
+                                           f"activa el boton 'Algo Trading' en el terminal MT5 de la cuenta o pide al broker habilitarlo")}
         last_error = f"{result.comment or 'retcode'} (retcode {result.retcode})"
 
     fill_mask = "?"
@@ -195,6 +199,10 @@ def close_position(symbol: str, position: int, side: str, volume: Optional[float
                 continue
             if result.retcode == mt5.TRADE_RETCODE_DONE:
                 return {"ok": True, "retcode": result.retcode}
+            if result.retcode in (mt5.TRADE_RETCODE_CLIENT_DISABLES_AT, mt5.TRADE_RETCODE_SERVER_DISABLES_AT):
+                side_txt = "CLIENTE" if result.retcode == mt5.TRADE_RETCODE_CLIENT_DISABLES_AT else "SERVIDOR"
+                return {"ok": False, "error": (f"AutoTrading deshabilitado ({side_txt}, retcode {result.retcode}): "
+                                               f"activa el boton 'Algo Trading' en el terminal MT5 de la cuenta o pide al broker habilitarlo")}
             last_error = result.comment or f"retcode {result.retcode}"
         time.sleep(RETRY_DELAY)
 
