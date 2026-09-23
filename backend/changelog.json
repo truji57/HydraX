@@ -1,5 +1,10 @@
 [
     {
+        "date":  "2026-09-23",
+        "description":  "Fix riesgo MT5 en pares JPY (USDJPY etc.): el tick value efectivo ahora compara currency_profit con la moneda de la cuenta; si difieren se usa el valor reportado (en moneda de cuenta) y la correccion de metales solo aplica cuando coinciden",
+        "version":  "v2.69"
+    },
+    {
         "date":  "2026-09-21",
         "description":  "NT8: el P&L del dia del bridge usa AccountItem.RealizedProfitLoss (neto diario) en vez de GrossRealizedProfitLoss (acumulado desde la conexion) [Requiere recompilar el AddOn .cs]",
         "version":  "v2.68"

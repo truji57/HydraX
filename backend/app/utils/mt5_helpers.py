@@ -264,24 +264,40 @@ def get_last_error():
         return None
 
 
-def effective_tick_value(symbol_info: dict) -> float:
-    """Tick value por lote corregido.
+def effective_tick_value(symbol_info: dict, account_currency: str | None = None) -> float:
+    """Tick value por lote corregido para el calculo de riesgo.
 
     MT5 puede reportar trade_tick_value escalado (~10x menor en metales como
-    XAUUSD, p. ej. 0.1 en vez de 1.0 con contract=100 y tick_size=0.01).
-    El valor real derivado es contract_size * tick_size; usamos el maximo de
-    ambos para no subestimar el riesgo.
+    XAUUSD cuando la moneda de beneficio coincide con la de la cuenta: p. ej.
+    0.1 en vez de 1.0 con contract=100 y tick_size=0.01).
+
+    Regla:
+    - Si la moneda de beneficio del simbolo (currency_profit) es DISTINTA de la
+      moneda de la cuenta (p. ej. pares JPY en cuenta USD), el valor reportado
+      ya esta en moneda de cuenta y es correcto: usarlo tal cual. NO comparar
+      con contract*tick_size, que ahi seria en la divisa cotizada (JPY) y
+      romperia el riesgo.
+    - Si coinciden (o no se conoce), aplicar max(reportado, contract*tick_size)
+      para corregir el escalado de metales.
     """
+    reported = float(symbol_info.get("trade_tick_value") or 0)
     try:
-        reported = float(symbol_info.get("trade_tick_value") or 0)
         ts = float(symbol_info.get("trade_tick_size") or 0)
         contract = float(symbol_info.get("trade_contract_size") or 0)
         derived = contract * ts
-        if reported > 0 and derived > reported:
-            return derived
-        return reported if reported > 0 else derived
     except Exception:
-        return float(symbol_info.get("trade_tick_value") or 0)
+        derived = 0.0
+
+    profit_currency = (symbol_info.get("currency_profit") or "").strip().upper()
+    if account_currency and profit_currency:
+        acct = str(account_currency).strip().upper()
+        if profit_currency != acct:
+            # moneda cotizada != moneda de cuenta (p. ej. USDJPY en cuenta USD)
+            return reported if reported > 0 else (derived if derived > 0 else reported)
+
+    if derived > 0 and reported > 0 and derived > reported:
+        return derived
+    return reported if reported > 0 else derived
 
 
 def test_connection(login: int, password: str, server: str, terminal_path: str) -> dict:
