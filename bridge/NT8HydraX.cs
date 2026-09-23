@@ -272,7 +272,7 @@ namespace NinjaTrader.NinjaScript.AddOns
                 double pnl = 0;
                 try { pnl = acc.Get(AccountItem.UnrealizedProfitLoss, Currency.UsDollar); } catch { }
                 double realized = 0;
-                try { realized = acc.Get(AccountItem.GrossRealizedProfitLoss, Currency.UsDollar); } catch { }
+                try { realized = acc.Get(AccountItem.RealizedProfitLoss, Currency.UsDollar); } catch { }
                 var data = new Dictionary<string, object>
                 {
                     ["ok"] = true,

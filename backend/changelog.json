@@ -1,6 +1,11 @@
 [
     {
         "date":  "2026-09-21",
+        "description":  "NT8: el P&L del dia del bridge usa AccountItem.RealizedProfitLoss (neto diario) en vez de GrossRealizedProfitLoss (acumulado desde la conexion) [Requiere recompilar el AddOn .cs]",
+        "version":  "v2.68"
+    },
+    {
+        "date":  "2026-09-21",
         "description":  "Invertir colores de plataforma: NT8 en naranja y MT5 en azul, en badges, acentos de tarjetas, badges de plantillas y contadores",
         "version":  "v2.67"
     },
