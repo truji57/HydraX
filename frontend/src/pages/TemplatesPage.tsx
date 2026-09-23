@@ -67,8 +67,8 @@ function TemplateFormFields({ form, setForm }: {
         {isGeneral && (
           <p className="text-xs text-emerald-400 mt-1">Plantilla <span className="font-medium">GNRL</span>: se puede aplicar a cuentas NT8 y MT5.</p>
         )}
-        {isFixedContracts && <p className="text-xs text-sky-400 mt-1">Plantilla <span className="font-medium">NT8</span>: solo aplicable a cuentas NinjaTrader.</p>}
-        {isFixedLots && <p className="text-xs text-orange-400 mt-1">Plantilla <span className="font-medium">MT5</span>: solo aplicable a cuentas MetaTrader.</p>}
+        {isFixedContracts && <p className="text-xs text-orange-400 mt-1">Plantilla <span className="font-medium">NT8</span>: solo aplicable a cuentas NinjaTrader.</p>}
+        {isFixedLots && <p className="text-xs text-sky-400 mt-1">Plantilla <span className="font-medium">MT5</span>: solo aplicable a cuentas MetaTrader.</p>}
         {(form.risk_mode === 'RISK_USD' || form.risk_mode === 'RISK_PERCENT') && (
           <p className="text-xs text-amber-400 mt-1">Depende de SL. Si el master abre sin SL se usara Prop. Balance.</p>
         )}

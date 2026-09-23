@@ -1,8 +1,8 @@
 import { cn } from '../../lib/utils';
 
 const COLORS = {
-  NT8: { color: '#38bdf8', bg: '#38bdf81f', border: '#38bdf855', label: 'NT8' },
-  MT5: { color: '#fb923c', bg: '#f9731622', border: '#f9731655', label: 'MT5' },
+  NT8: { color: '#fb923c', bg: '#f9731622', border: '#f9731655', label: 'NT8' },
+  MT5: { color: '#38bdf8', bg: '#38bdf81f', border: '#38bdf855', label: 'MT5' },
 } as const;
 
 export function PlatformBadge({ platform, className }: { platform?: string | null; className?: string }) {
@@ -19,5 +19,5 @@ export function PlatformBadge({ platform, className }: { platform?: string | nul
 }
 
 export function platformAccent(platform?: string | null): string {
-  return platform === 'MT5' ? '#f97316' : '#38bdf8';
+  return platform === 'MT5' ? '#38bdf8' : '#f97316';
 }

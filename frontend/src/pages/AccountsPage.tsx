@@ -279,7 +279,7 @@ export default function AccountsPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <div><h2 className="text-xl font-bold text-white">Cuentas</h2><p className="text-sm text-zinc-500">{accounts.length} cuentas · <span className="text-sky-400">NT8</span> {accounts.filter(a => (a.platform || 'NT8') === 'NT8').length} · <span className="text-orange-400">MT5</span> {accounts.filter(a => a.platform === 'MT5').length}</p></div>
+        <div><h2 className="text-xl font-bold text-white">Cuentas</h2><p className="text-sm text-zinc-500">{accounts.length} cuentas · <span className="text-orange-400">NT8</span> {accounts.filter(a => (a.platform || 'NT8') === 'NT8').length} · <span className="text-sky-400">MT5</span> {accounts.filter(a => a.platform === 'MT5').length}</p></div>
         <div className="flex gap-2">
           <Button variant="primary" onClick={() => openNew('MASTER')} disabled={copierRunning} title={copierRunning ? 'Para el copiador para crear cuentas' : ''}><Plus size={14} /> Master</Button>
           <Button variant="outline" onClick={() => openNew('SLAVE')} disabled={copierRunning} title={copierRunning ? 'Para el copiador para crear cuentas' : ''}><Plus size={14} /> Slave</Button>

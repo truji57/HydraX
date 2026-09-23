@@ -9,8 +9,8 @@ export function templateKind(mode: RiskMode | string): TemplateKind {
 }
 
 export const KIND_STYLE: Record<TemplateKind, { label: string; color: string; bg: string; border: string }> = {
-  NT8: { label: 'NT8', color: '#38bdf8', bg: '#38bdf81f', border: '#38bdf855' },
-  MT5: { label: 'MT5', color: '#fb923c', bg: '#f9731622', border: '#f9731655' },
+  NT8: { label: 'NT8', color: '#fb923c', bg: '#f9731622', border: '#f9731655' },
+  MT5: { label: 'MT5', color: '#38bdf8', bg: '#38bdf81f', border: '#38bdf855' },
   GNRL: { label: 'GNRL', color: '#a3a3a3', bg: '#52525222', border: '#52525255' },
 };
 

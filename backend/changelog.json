@@ -1,6 +1,11 @@
 [
     {
         "date":  "2026-09-21",
+        "description":  "Invertir colores de plataforma: NT8 en naranja y MT5 en azul, en badges, acentos de tarjetas, badges de plantillas y contadores",
+        "version":  "v2.67"
+    },
+    {
+        "date":  "2026-09-21",
         "description":  "Manejo de 'AutoTrading deshabilitado' en MT5: cuando el servidor/cliente bloquea el trading automatico (retcode 10016/10017) los workers abortan con mensaje claro en vez de seguir probando fillings (esta era la causa real de los fallos en XAUUSD.raw, no el filling mode)",
         "version":  "v2.66"
     },
