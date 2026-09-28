@@ -65,6 +65,7 @@ export interface SlaveConfig {
   template_id: string | null;
   delay_sec: number;
   magic_number: number;
+  order_comment: string | null;
 }
 
 export interface CopierStatus {
@@ -118,6 +119,7 @@ export interface SlaveTemplate {
   daily_profit_mode: 'USD' | 'PERCENT';
   delay_sec: number;
   magic_number: number;
+  order_comment: string | null;
   created_at: string;
   updated_at: string;
 }

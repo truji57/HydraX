@@ -15,7 +15,7 @@ TEMPLATE_FIELDS = [
     "autocopy_enable", "copy_sl", "copy_tp", "inverse_copy", "copy_modify",
     "sync_close", "daily_loss_enabled", "daily_loss_limit", "daily_loss_mode",
     "daily_profit_enabled", "daily_profit_limit", "daily_profit_mode",
-    "delay_sec", "magic_number",
+    "delay_sec", "magic_number", "order_comment",
 ]
 
 
@@ -84,6 +84,7 @@ def update_template(template_id: str, data: SlaveTemplateUpdate, db: Session = D
         sc.daily_profit_mode = t.daily_profit_mode
         sc.delay_sec = t.delay_sec
         sc.magic_number = t.magic_number
+        sc.order_comment = t.order_comment
 
     db.commit()
     db.refresh(t)

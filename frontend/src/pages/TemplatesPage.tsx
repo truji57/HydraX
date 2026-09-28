@@ -36,6 +36,7 @@ const emptyTemplate: Omit<SlaveTemplate, 'id' | 'created_at' | 'updated_at'> = {
   daily_profit_mode: 'USD' as const,
   delay_sec: 0,
   magic_number: 0,
+  order_comment: '',
 };
 
 function KindBadge({ mode }: { mode: RiskMode | string }) {
@@ -90,6 +91,7 @@ function TemplateFormFields({ form, setForm }: {
       <div><Label>Max Posiciones</Label><Input type="number" value={form.max_positions} onChange={e => setForm({...form, max_positions: Number(e.target.value)})} /></div>
       <div><Label>Delay (seg)</Label><DecimalInput value={form.delay_sec} onChange={v => setForm({...form, delay_sec: v})} /></div>
       <div><Label>Magic Number</Label><Input type="number" value={form.magic_number} onChange={e => setForm({...form, magic_number: Number(e.target.value)})} /></div>
+      <div><Label>Comentario de orden</Label><Input value={form.order_comment ?? ''} maxLength={32} onChange={e => setForm({...form, order_comment: e.target.value})} placeholder="Opcional (vacío = en blanco)" /></div>
     </div>
   );
 }
@@ -158,7 +160,7 @@ export default function TemplatesPage() {
       daily_loss_mode: t.daily_loss_mode,
       daily_profit_enabled: t.daily_profit_enabled, daily_profit_limit: t.daily_profit_limit,
       daily_profit_mode: t.daily_profit_mode,
-      delay_sec: t.delay_sec, magic_number: t.magic_number,
+      delay_sec: t.delay_sec, magic_number: t.magic_number, order_comment: t.order_comment ?? '',
     });
   };
 

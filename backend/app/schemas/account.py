@@ -88,6 +88,7 @@ class SlaveConfigBase(BaseModel):
     template_id: Optional[str] = None
     delay_sec: float = 0.0
     magic_number: int = 0
+    order_comment: Optional[str] = None
 
 
 class SlaveConfigUpdate(SlaveConfigBase):
@@ -136,6 +137,7 @@ class SlaveTemplateBase(BaseModel):
     daily_profit_mode: PnLMode = PnLMode.USD
     delay_sec: float = 0.0
     magic_number: int = 0
+    order_comment: Optional[str] = None
 
 
 class SlaveTemplateCreate(SlaveTemplateBase):
@@ -167,6 +169,7 @@ class SlaveTemplateUpdate(BaseModel):
     daily_profit_mode: Optional[PnLMode] = None
     delay_sec: Optional[float] = None
     magic_number: Optional[int] = None
+    order_comment: Optional[str] = None
 
 
 class SlaveTemplateResponse(SlaveTemplateBase):

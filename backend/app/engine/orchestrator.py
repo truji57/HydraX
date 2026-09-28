@@ -150,7 +150,7 @@ class CopierOrchestrator:
                         self._running = False
                         return {"ok": False, "message": f"No se pudo conectar a NT8. Verifica que NT8 este abierto con el bridge. Fallos: {'; '.join(failed_bridges)}"}
                     if not bridges_ok:
-                        logger.warning("NT8 bridge no disponible; se inician solo masters MT5")
+                        logger.warning("NT8 bridge no disponible al arrancar; los workers NT8 reintentaran hasta que NT8 este disponible")
 
                 for slave in slaves:
                     config = db.query(SlaveConfig).filter(SlaveConfig.account_id == slave.id).first()
@@ -191,6 +191,7 @@ class CopierOrchestrator:
                         "daily_profit_limit": config.daily_profit_limit or 0.0,
                         "delay_sec": config.delay_sec or 0.0,
                         "magic_number": config.magic_number or 0,
+                        "order_comment": config.order_comment,
                     }
                     self._slave_configs[slave.id] = slave_cfg
 
@@ -294,6 +295,7 @@ class CopierOrchestrator:
             cfg["daily_loss_enabled"], cfg["daily_loss_limit"],
             cfg["daily_profit_enabled"], cfg["daily_profit_limit"],
             cfg["delay_sec"], cfg["magic_number"],
+            cfg.get("order_comment") or "",
             q, stop_flag, self._event_queue,
         )
 

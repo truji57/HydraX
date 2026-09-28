@@ -94,6 +94,7 @@ export default function SlaveConfigPage() {
       daily_profit_mode: t.daily_profit_mode,
       delay_sec: t.delay_sec,
       magic_number: t.magic_number,
+      order_comment: t.order_comment ?? '',
     });
   };
 
@@ -216,6 +217,7 @@ export default function SlaveConfigPage() {
                   <div><Label>Max Posiciones</Label><Input type="number" disabled={templateLocked} value={config.max_positions} onChange={e => updateConfig({max_positions: Number(e.target.value)})} /></div>
                   <div><Label>Delay (seg)</Label><DecimalInput disabled={templateLocked} value={config.delay_sec} onChange={v => updateConfig({delay_sec: v})} /></div>
                   <div><Label>Magic Number</Label><Input type="number" disabled={templateLocked} value={config.magic_number ?? 0} onChange={e => updateConfig({magic_number: Number(e.target.value)})} /></div>
+                  <div><Label>Comentario de orden</Label><Input disabled={templateLocked} value={config.order_comment ?? ''} maxLength={32} onChange={e => updateConfig({order_comment: e.target.value})} placeholder="Opcional (vacío = comentario en blanco)" /></div>
                 </div>
                 <div className="flex items-center justify-between p-4 rounded-lg border border-zinc-700 bg-zinc-800/30">
                   <div>

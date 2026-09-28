@@ -110,6 +110,7 @@ class SlaveConfig(Base):
     paused_by_limit = Column(Boolean, default=False)
     delay_sec = Column(Float, default=0.0)
     magic_number = Column(Integer, default=0)
+    order_comment = Column(String(100), nullable=True)
 
     account = relationship("Account", back_populates="slave_config")
 
@@ -154,5 +155,6 @@ class SlaveTemplate(Base):
     daily_profit_mode = Column(Enum(PnLMode), default=PnLMode.USD)
     delay_sec = Column(Float, default=0.0)
     magic_number = Column(Integer, default=0)
+    order_comment = Column(String(100), nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

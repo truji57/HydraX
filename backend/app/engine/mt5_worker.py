@@ -272,6 +272,13 @@ def mt5_master_monitor(account_id: str, name: str, login: int, password_enc: str
         logger.info(f"{display}: monitor stopped")
 
 
+def _sanitize_comment(value) -> str:
+    """Comentario de orden: en blanco si vacio, truncado a 32 caracteres."""
+    if not value:
+        return ""
+    return str(value).strip()[:32]
+
+
 def mt5_slave_executor(account_id: str, name: str, login: int, password_enc: str,
                        server: str, terminal_path: str, filling_mode: str | None,
                        risk_mode: str, risk_percent: float, risk_usd: float,
@@ -281,7 +288,7 @@ def mt5_slave_executor(account_id: str, name: str, login: int, password_enc: str
                        sync_close: bool,
                        daily_loss_enabled: bool, daily_loss_limit: float,
                        daily_profit_enabled: bool, daily_profit_limit: float,
-                       delay_sec: float, magic_number: int,
+                       delay_sec: float, magic_number: int, order_comment: str,
                        queue: mp.Queue, stop_flag: mp.Event, event_queue: mp.Queue):
     display = name or f"mt5-slave-{login}"
 
@@ -313,6 +320,7 @@ def mt5_slave_executor(account_id: str, name: str, login: int, password_enc: str
         "daily_profit_enabled": daily_profit_enabled, "daily_profit_limit": daily_profit_limit,
         "daily_profit_mode": "USD",
         "delay_sec": delay_sec, "magic_number": magic_number,
+        "order_comment": order_comment,
     }
 
     def reload_config():
@@ -335,6 +343,7 @@ def mt5_slave_executor(account_id: str, name: str, login: int, password_enc: str
                 _config["sync_close"] = cfg.sync_close if cfg.sync_close is not None else False
                 _config["delay_sec"] = cfg.delay_sec or 0.0
                 _config["magic_number"] = cfg.magic_number or 0
+                _config["order_comment"] = getattr(cfg, "order_comment", None) or ""
                 _config["daily_loss_enabled"] = cfg.daily_loss_enabled or False
                 _config["daily_loss_limit"] = cfg.daily_loss_limit or 0.0
                 _config["daily_profit_enabled"] = cfg.daily_profit_enabled or False
@@ -623,7 +632,8 @@ def mt5_slave_executor(account_id: str, name: str, login: int, password_enc: str
                     continue
 
                 logger.info(f"{display}: OPEN {symbol} {direction} {lots:.2f} lots (mode={_config['risk_mode']} sl={sl} tp={tp})")
-                result = open_position(symbol, lots, direction, sl, tp, _config["magic_number"], filling=_force_filling)
+                result = open_position(symbol, lots, direction, sl, tp, _config["magic_number"],
+                                        comment=_sanitize_comment(_config["order_comment"]), filling=_force_filling)
                 if result and result.get("ok"):
                     slave_ticket = int(result["position_id"])
                     confirm_open(master_ticket, account_id, str(slave_ticket))
@@ -660,7 +670,8 @@ def mt5_slave_executor(account_id: str, name: str, login: int, password_enc: str
                         break
 
                 side = payload.get("side", "BUY")
-                result = close_position(symbol, int(slave_ticket), side, magic=_config["magic_number"], filling=_force_filling)
+                result = close_position(symbol, int(slave_ticket), side, magic=_config["magic_number"],
+                            comment=_sanitize_comment(_config["order_comment"]), filling=_force_filling)
                 if result and result.get("ok"):
                     mark_closed(master_ticket, account_id)
                     _log_trade(master_account_id, account_id, TradeAction.CLOSE, symbol,

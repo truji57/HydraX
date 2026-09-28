@@ -194,6 +194,7 @@ def _migrate_mt5_risk():
                 for col, ddl in [
                     ("fixed_lots", f"ALTER TABLE {table} ADD COLUMN fixed_lots FLOAT DEFAULT 0.01"),
                     ("max_lots", f"ALTER TABLE {table} ADD COLUMN max_lots FLOAT DEFAULT 10.0"),
+                    ("order_comment", f"ALTER TABLE {table} ADD COLUMN order_comment VARCHAR(100) DEFAULT NULL"),
                 ]:
                     result = conn.exec_driver_sql(
                         f"SELECT name FROM pragma_table_info('{table}') WHERE name='{col}'"
