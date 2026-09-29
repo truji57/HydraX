@@ -1,5 +1,10 @@
 [
     {
+        "date":  "2026-09-29",
+        "description":  "SL/TP MT5 copiados por DISTANCIA (no precio absoluto): el slave coloca el stop y el take a la misma distancia de la entrada que el master, corregido en OPEN y MODIFY, con redondeo al tick del simbolo slave. Evita el skew de SL/TP cuando la entrada del slave difiere de la del master o entre brokers. NT8 sin cambios",
+        "version":  "v2.71"
+    },
+    {
         "date":  "2026-09-28",
         "description":  "Comentario de ordenes MT5 (campo order_comment por slave y plantilla, saneado a 32 chars o en blanco) + reconexion automatica del bridge NT8: los workers reintentan cada 5s en vez de rendirse, para que conecten solos si NT8 se abre despues de HydraX",
         "version":  "v2.70"

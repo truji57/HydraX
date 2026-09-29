@@ -220,6 +220,7 @@ def mt5_master_monitor(account_id: str, name: str, login: int, password_enc: str
                                 "symbol": cur["symbol"],
                                 "new_sl": cur["sl"],
                                 "new_tp": cur["tp"],
+                                "master_entry": cur["price_open"],
                                 "master_account_id": account_id,
                                 "server_master": server,
                             },
@@ -631,9 +632,12 @@ def mt5_slave_executor(account_id: str, name: str, login: int, password_enc: str
                     _pause_slave(f"{limit_type} diario alcanzado: ${pnl_value:.2f}")
                     continue
 
-                logger.info(f"{display}: OPEN {symbol} {direction} {lots:.2f} lots (mode={_config['risk_mode']} sl={sl} tp={tp})")
-                result = open_position(symbol, lots, direction, sl, tp, _config["magic_number"],
-                                        comment=_sanitize_comment(_config["order_comment"]), filling=_force_filling)
+                sl_dist = abs(entry_price - sl) if sl else 0.0
+                tp_dist = abs(tp - entry_price) if tp else 0.0
+                logger.info(f"{display}: OPEN {symbol} {direction} {lots:.2f} lots (mode={_config['risk_mode']} sl_dist={sl_dist:.2f} tp_dist={tp_dist:.2f})")
+                result = open_position(symbol, lots, direction, 0, 0, _config["magic_number"],
+                                        comment=_sanitize_comment(_config["order_comment"]), filling=_force_filling,
+                                        sl_dist=sl_dist, tp_dist=tp_dist)
                 if result and result.get("ok"):
                     slave_ticket = int(result["position_id"])
                     confirm_open(master_ticket, account_id, str(slave_ticket))
@@ -707,7 +711,11 @@ def mt5_slave_executor(account_id: str, name: str, login: int, password_enc: str
 
                 new_sl = payload.get("new_sl", 0.0) if _config["copy_sl"] else 0.0
                 new_tp = payload.get("new_tp", 0.0) if _config["copy_tp"] else 0.0
-                result = modify_position(symbol, int(slave_ticket), new_sl, new_tp, _config["magic_number"])
+                master_entry = payload.get("master_entry", 0)
+                sl_dist = abs(master_entry - new_sl) if (new_sl and master_entry) else 0.0
+                tp_dist = abs(new_tp - master_entry) if (new_tp and master_entry) else 0.0
+                result = modify_position(symbol, int(slave_ticket), 0, 0, _config["magic_number"],
+                                          sl_dist=sl_dist, tp_dist=tp_dist)
                 if result and result.get("ok"):
                     _log_trade(master_account_id, account_id, TradeAction.MODIFY, symbol, 0, 0,
                                new_sl, new_tp, TradeResult.SUCCESS,

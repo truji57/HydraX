@@ -108,14 +108,38 @@ def get_history_deals_since(start: datetime) -> list[dict]:
     return [d._asdict() for d in deals]
 
 
+def _round_to_tick(symbol: str, value: float) -> float:
+    """Redondea un nivel de precio al tick del simbolo para evitar 'invalid stops'."""
+    if not value:
+        return 0.0
+    try:
+        si = mt5.symbol_info(symbol)
+        ts = float(si.trade_tick_size) if si and getattr(si, "trade_tick_size", 0) else 0.0
+    except Exception:
+        ts = 0.0
+    if ts <= 0:
+        return value
+    steps = round(value / ts)
+    return round(steps * ts, 8)
+
+
 def open_position(symbol: str, volume: float, side: str, sl: float = 0, tp: float = 0,
                   magic: int = 0, comment: str = "", deviation: int = 50,
-                  filling: int | None = None) -> dict:
+                  filling: int | None = None, sl_dist: float = 0.0, tp_dist: float = 0.0) -> dict:
     order_type = mt5.ORDER_TYPE_BUY if side.upper() == "BUY" else mt5.ORDER_TYPE_SELL
     tick = mt5.symbol_info_tick(symbol)
     if tick is None:
         return {"ok": False, "error": f"no tick para {symbol}"}
     price = tick.ask if order_type == mt5.ORDER_TYPE_BUY else tick.bid
+
+    sl_val = float(sl) if sl else 0.0
+    tp_val = float(tp) if tp else 0.0
+    if sl_dist > 0:
+        sl_val = price - sl_dist if order_type == mt5.ORDER_TYPE_BUY else price + sl_dist
+    if tp_dist > 0:
+        tp_val = price + tp_dist if order_type == mt5.ORDER_TYPE_BUY else price - tp_dist
+    sl_val = _round_to_tick(symbol, sl_val)
+    tp_val = _round_to_tick(symbol, tp_val)
 
     fill_names = {mt5.ORDER_FILLING_FOK: "FOK", mt5.ORDER_FILLING_IOC: "IOC",
                   mt5.ORDER_FILLING_RETURN: "RETURN", mt5.ORDER_FILLING_BOC: "BOC"}
@@ -129,8 +153,8 @@ def open_position(symbol: str, volume: float, side: str, sl: float = 0, tp: floa
             "volume": float(volume),
             "type": order_type,
             "price": price,
-            "sl": float(sl) if sl else 0.0,
-            "tp": float(tp) if tp else 0.0,
+            "sl": sl_val,
+            "tp": tp_val,
             "deviation": deviation,
             "magic": magic,
             "comment": comment or "",
@@ -210,13 +234,27 @@ def close_position(symbol: str, position: int, side: str, volume: Optional[float
 
 
 def modify_position(symbol: str, position: int, sl: float = 0, tp: float = 0,
-                    magic: int = 0, comment: str = "") -> dict:
+                    magic: int = 0, comment: str = "", sl_dist: float = 0.0,
+                    tp_dist: float = 0.0) -> dict:
+    sl_val = float(sl) if sl else 0.0
+    tp_val = float(tp) if tp else 0.0
+    if sl_dist > 0 or tp_dist > 0:
+        pos = next((p for p in (mt5.positions_get() or []) if int(p.ticket) == int(position)), None)
+        if pos is not None:
+            entry = float(pos.price_open)
+            pos_type = int(pos.type)  # 0=BUY, 1=SELL
+            if sl_dist > 0:
+                sl_val = entry - sl_dist if pos_type == 0 else entry + sl_dist
+            if tp_dist > 0:
+                tp_val = entry + tp_dist if pos_type == 0 else entry - tp_dist
+    sl_val = _round_to_tick(symbol, sl_val)
+    tp_val = _round_to_tick(symbol, tp_val)
     request = {
         "action": mt5.TRADE_ACTION_SLTP,
         "symbol": symbol,
         "position": int(position),
-        "sl": float(sl) if sl else 0.0,
-        "tp": float(tp) if tp else 0.0,
+        "sl": sl_val,
+        "tp": tp_val,
         "magic": magic,
         "comment": comment or "",
     }
