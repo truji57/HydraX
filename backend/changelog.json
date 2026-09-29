@@ -1,6 +1,11 @@
 [
     {
         "date":  "2026-09-29",
+        "description":  "Evento copy_ok de apertura MT5 muestra el valor REAL en USD del SL y del TP (con la entrada y los niveles realmente colocados/redondeados) en Eventos Recientes y Log",
+        "version":  "v2.72"
+    },
+    {
+        "date":  "2026-09-29",
         "description":  "SL/TP MT5 copiados por DISTANCIA (no precio absoluto): el slave coloca el stop y el take a la misma distancia de la entrada que el master, corregido en OPEN y MODIFY, con redondeo al tick del simbolo slave. Evita el skew de SL/TP cuando la entrada del slave difiere de la del master o entre brokers. NT8 sin cambios",
         "version":  "v2.71"
     },

@@ -168,7 +168,10 @@ def open_position(symbol: str, volume: float, side: str, sl: float = 0, tp: floa
         if result is None:
             continue
         if result.retcode == mt5.TRADE_RETCODE_DONE:
-            return {"ok": True, "position_id": int(result.order), "price": price}
+            real_price = float(getattr(result, "price", 0) or 0)
+            return {"ok": True, "position_id": int(result.order),
+                    "price": real_price if real_price > 0 else price,
+                    "sl": sl_val, "tp": tp_val}
         if result.retcode in (mt5.TRADE_RETCODE_CLIENT_DISABLES_AT, mt5.TRADE_RETCODE_SERVER_DISABLES_AT):
             side_txt = "CLIENTE" if result.retcode == mt5.TRADE_RETCODE_CLIENT_DISABLES_AT else "SERVIDOR"
             return {"ok": False, "error": (f"AutoTrading deshabilitado ({side_txt}, retcode {result.retcode}): "

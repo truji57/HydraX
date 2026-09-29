@@ -644,9 +644,28 @@ def mt5_slave_executor(account_id: str, name: str, login: int, password_enc: str
                     _log_trade(master_account_id, account_id, TradeAction.OPEN, symbol, lots,
                                entry_price, sl, tp, TradeResult.SUCCESS,
                                master_ticket=master_ticket, slave_ticket=str(slave_ticket))
+                    sl_usd = 0.0
+                    tp_usd = 0.0
+                    try:
+                        actual_entry = float(result.get("price", 0) or 0)
+                        actual_sl = float(result.get("sl", 0) or 0)
+                        actual_tp = float(result.get("tp", 0) or 0)
+                        sym_i = mt5_helpers.get_symbol_info(symbol)
+                        acc_i = get_account_info()
+                        if sym_i and acc_i:
+                            ts = float(sym_i.get("trade_tick_size", 0) or 0)
+                            tv = mt5_helpers.effective_tick_value(sym_i, account_currency=acc_i.get("currency"))
+                            if ts > 0 and tv > 0 and actual_entry:
+                                if actual_sl:
+                                    sl_usd = lots * (abs(actual_entry - actual_sl) / ts) * tv
+                                if actual_tp:
+                                    tp_usd = lots * (abs(actual_tp - actual_entry) / ts) * tv
+                    except Exception:
+                        pass
                     _emit_event(event_queue, "copy_ok", {"slave": display, "symbol": symbol, "action": "OPEN",
                                                          "volume": lots, "master_ticket": master_ticket,
-                                                         "slave_ticket": slave_ticket})
+                                                         "slave_ticket": slave_ticket,
+                                                         "sl_usd": round(sl_usd, 2), "tp_usd": round(tp_usd, 2)})
                     logger.info(f"{display}: OPEN OK {symbol} {lots:.2f} lots ticket={slave_ticket}")
                 else:
                     mark_pending_error(master_ticket, account_id)
